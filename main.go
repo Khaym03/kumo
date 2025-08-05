@@ -1,11 +1,12 @@
 package main
 
-import (
-	"time"
-)
+import "github.com/Khaym03/kumo/collectors"
 
 func main() {
 	k := NewKumo()
 	defer k.Shutdown()
-	time.Sleep(5 * time.Second)
+
+	k.RegisterCollector(&collectors.CategoriesCollector{})
+
+	k.Run()
 }
