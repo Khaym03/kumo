@@ -35,7 +35,7 @@ func (k *Kumo) Run() {
 	go k.router.Run()
 
 	for _, c := range k.collectors {
-		err := c.Collect(k.ctx, k.scheduler)
+		err := c.Collect(k.ctx)
 		if err != nil {
 			log.Println(err)
 		}
