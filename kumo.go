@@ -14,7 +14,6 @@ type Kumo struct {
 	ctx        context.Context
 	browser    *rod.Browser
 	scheduler  sche.Scheduler
-	router     *rod.HijackRouter
 	collectors []collectors.Collector
 }
 
@@ -27,13 +26,10 @@ func NewKumo() *Kumo {
 		browser:    b,
 		scheduler:  sche.NewScheduler(b, 2),
 		collectors: []collectors.Collector{},
-		router:     b.HijackRequests(),
 	}
 }
 
 func (k *Kumo) Run() {
-	go k.router.Run()
-
 	for _, c := range k.collectors {
 		err := c.Collect(k.ctx)
 		if err != nil {
@@ -42,15 +38,10 @@ func (k *Kumo) Run() {
 	}
 }
 
-func (k *Kumo) RegisterRouterMiddleware(pattern string, handler func(*rod.Hijack)) {
-	k.router.MustAdd(pattern, handler)
-}
-
 func (k *Kumo) RegisterCollector(c collectors.Collector) {
 	k.collectors = append(k.collectors, c)
 }
 
 func (k Kumo) Shutdown() {
-	k.router.MustStop()
 	k.browser.MustClose()
 }

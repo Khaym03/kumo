@@ -1,6 +1,8 @@
 package main
 
-import "github.com/Khaym03/kumo/collectors"
+import (
+	"github.com/Khaym03/kumo/collectors"
+)
 
 func main() {
 	k := NewKumo()
