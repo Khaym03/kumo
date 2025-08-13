@@ -1,14 +1,11 @@
 package main
 
-import (
-	"github.com/Khaym03/kumo/collectors"
-)
+import "github.com/Khaym03/kumo/core"
 
 func main() {
-	k := NewKumo()
-	defer k.Shutdown()
+	var kumo core.Kumo = core.NewKumoHTTP()
 
-	k.RegisterCollector(collectors.NewCategoriesCollector(k.scheduler))
+	defer kumo.Shutdown()
 
-	k.Run()
+	kumo.Run()
 }
