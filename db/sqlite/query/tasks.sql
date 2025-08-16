@@ -1,9 +1,16 @@
 -- name: GetStatusIDByName :one
 SELECT id FROM task_status WHERE name = ?;
 
+-- name: GetTaskStatus :many
+SELECT *
+FROM task_status;
+
 -- name: AddTask :exec
 INSERT INTO tasks (id, url, status_id)
 VALUES (?, ?, ?);
+
+-- name: ListTasksByStatusID :many
+SELECT * FROM tasks WHERE status_id = ?;
 
 -- name: GetTaskForProcessing :one
 UPDATE tasks

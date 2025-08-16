@@ -4,12 +4,16 @@
 
 package db
 
+import (
+	"time"
+)
+
 type Task struct {
-	ID        string      `json:"id"`
-	Url       string      `json:"url"`
-	StatusID  int64       `json:"status_id"`
-	Retries   int64       `json:"retries"`
-	CreatedAt interface{} `json:"created_at"`
+	ID        string     `json:"id"`
+	Url       string     `json:"url"`
+	StatusID  int64      `json:"status_id"`
+	Retries   int64      `json:"retries"`
+	CreatedAt *time.Time `json:"created_at"`
 }
 
 type TaskStatus struct {

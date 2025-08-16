@@ -1,7 +1,7 @@
 -- +goose Up
 -- SQL in this section is executed when the migration is applied.
 CREATE TABLE task_status (
-    id INTEGER PRIMARY KEY,
+    id TINYINT PRIMARY KEY,
     name TEXT NOT NULL UNIQUE
 );
 

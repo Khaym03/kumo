@@ -83,6 +83,34 @@ func (q *Queries) GetTaskForProcessing(ctx context.Context, arg GetTaskForProces
 	return i, err
 }
 
+const getTaskStatus = `-- name: GetTaskStatus :many
+SELECT id, name
+FROM task_status
+`
+
+func (q *Queries) GetTaskStatus(ctx context.Context) ([]TaskStatus, error) {
+	rows, err := q.db.QueryContext(ctx, getTaskStatus)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []TaskStatus
+	for rows.Next() {
+		var i TaskStatus
+		if err := rows.Scan(&i.ID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listPendingOrFailedTasks = `-- name: ListPendingOrFailedTasks :many
 SELECT id, url, status_id, retries, created_at
 FROM tasks
@@ -97,6 +125,39 @@ type ListPendingOrFailedTasksParams struct {
 
 func (q *Queries) ListPendingOrFailedTasks(ctx context.Context, arg ListPendingOrFailedTasksParams) ([]Task, error) {
 	rows, err := q.db.QueryContext(ctx, listPendingOrFailedTasks, arg.StatusID, arg.StatusID_2)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Task
+	for rows.Next() {
+		var i Task
+		if err := rows.Scan(
+			&i.ID,
+			&i.Url,
+			&i.StatusID,
+			&i.Retries,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listTasksByStatusID = `-- name: ListTasksByStatusID :many
+SELECT id, url, status_id, retries, created_at FROM tasks WHERE status_id = ?
+`
+
+func (q *Queries) ListTasksByStatusID(ctx context.Context, statusID int64) ([]Task, error) {
+	rows, err := q.db.QueryContext(ctx, listTasksByStatusID, statusID)
 	if err != nil {
 		return nil, err
 	}

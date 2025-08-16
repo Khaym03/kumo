@@ -7,20 +7,18 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-func NewSQLiteConn() (*sql.DB, error) {
-	dbPath := "db/kumo.db"
+func NewSQLiteConn() *sql.DB {
+	dbPath := "db/sqlite/kumo.db"
 
 	dbConn, err := sql.Open("sqlite", dbPath)
 	if err != nil {
-		log.Println("Error opening database:", err)
-		return nil, err
+		log.Fatal("Error opening database:", err)
 	}
 
 	err = dbConn.Ping()
 	if err != nil {
-		log.Println("Error pinging database:", err)
-		return nil, err
+		log.Fatal("Error pinging database:", err)
 	}
 
-	return dbConn, nil
+	return dbConn
 }
