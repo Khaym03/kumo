@@ -8,26 +8,23 @@ import (
 	sche "github.com/Khaym03/kumo/scheduler"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
+
+	_ "github.com/PuerkitoBio/goquery"
+	_ "golang.org/x/time/rate"
 )
 
-type Kumo interface {
-	Run()
-	RegisterCollector(c collectors.Collector)
-	Shutdown()
-}
-
-type KumoBrowser struct {
+type Kumo struct {
 	ctx       context.Context
 	browser   *rod.Browser
 	scheduler sche.Scheduler
 	*collectors.CollectorRegistry
 }
 
-func NewKumoBrowser() *KumoBrowser {
+func NewKumo() *Kumo {
 	u := launcher.New().Leakless(false).MustLaunch()
 	b := rod.New().ControlURL(u).Trace(true).MustConnect()
 
-	return &KumoBrowser{
+	return &Kumo{
 		ctx:               context.Background(),
 		browser:           b,
 		scheduler:         sche.NewScheduler(b, 2),
@@ -35,7 +32,7 @@ func NewKumoBrowser() *KumoBrowser {
 	}
 }
 
-func (k *KumoBrowser) Run() {
+func (k *Kumo) Run() {
 	for _, c := range k.Collectors {
 		err := c.Collect(k.ctx)
 		if err != nil {
@@ -44,6 +41,6 @@ func (k *KumoBrowser) Run() {
 	}
 }
 
-func (k KumoBrowser) Shutdown() {
+func (k Kumo) Shutdown() {
 	k.browser.MustClose()
 }
