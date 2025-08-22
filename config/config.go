@@ -1,7 +1,7 @@
 package config
 
 import (
-	"context"
+	"database/sql"
 
 	db "github.com/Khaym03/kumo/db/sqlite/gen"
 	"github.com/sirupsen/logrus"
@@ -10,13 +10,20 @@ import (
 type AppConfig struct {
 	Queries    *db.Queries
 	Logger     *logrus.Logger
-	TaskStatus *taskStatus
+	TaskStatus *TaskStatus
+	DB         *sql.DB
 }
 
-func NewAppConfig(ctx context.Context, queries *db.Queries) AppConfig {
+func NewAppConfig(
+	DB *sql.DB,
+	queries *db.Queries,
+	logger *logrus.Logger,
+	ts *TaskStatus,
+) AppConfig {
 	return AppConfig{
 		Queries:    queries,
-		TaskStatus: NewTaskStates(queries),
-		Logger:     logrus.New(),
+		TaskStatus: ts,
+		Logger:     logger,
+		DB:         DB,
 	}
 }

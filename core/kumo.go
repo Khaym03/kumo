@@ -2,18 +2,14 @@ package core
 
 import (
 	"context"
-	"database/sql"
 	"log"
 
 	"github.com/Khaym03/kumo/collectors"
 	"github.com/Khaym03/kumo/config"
 	"github.com/Khaym03/kumo/controller"
-	db "github.com/Khaym03/kumo/db/sqlite/gen"
 	sche "github.com/Khaym03/kumo/scheduler"
 	"github.com/go-rod/rod"
-	"github.com/go-rod/rod/lib/launcher"
 
-	sqlite "github.com/Khaym03/kumo/db/sqlite"
 	_ "github.com/PuerkitoBio/goquery"
 	_ "golang.org/x/time/rate"
 )
@@ -25,25 +21,21 @@ type Kumo struct {
 	*collectors.CollectorRegistry
 	controller.Reconciler
 	config.AppConfig
-	storage *sql.DB
 }
 
-func NewKumo() *Kumo {
-	u := launcher.New().Leakless(false).MustLaunch()
-	b := rod.New().ControlURL(u).Trace(true).MustConnect()
-
-	conn := sqlite.NewSQLiteConn()
-
-	conf := config.NewAppConfig(context.Background(), db.New(conn))
-
+func NewKumo(
+	browser *rod.Browser,
+	scheduler sche.Scheduler,
+	registry *collectors.CollectorRegistry,
+	reconciler controller.Reconciler,
+	appConfig config.AppConfig,
+) *Kumo {
 	return &Kumo{
-		ctx:               context.Background(),
-		browser:           b,
-		scheduler:         sche.NewScheduler(b, 2),
-		CollectorRegistry: collectors.NewCollectorRegistry(),
-		Reconciler:        controller.NewStateReconciler(conf),
-		AppConfig:         conf,
-		storage:           conn,
+		browser:           browser,
+		scheduler:         scheduler,
+		CollectorRegistry: registry,
+		Reconciler:        reconciler,
+		AppConfig:         appConfig,
 	}
 }
 
@@ -63,8 +55,4 @@ func (k *Kumo) Run() {
 
 func (k Kumo) Shutdown() {
 	k.browser.MustClose()
-	// err := k.storage.Close()
-	// if err != nil {
-	// 	k.Logger.Error(err)
-	// }
 }

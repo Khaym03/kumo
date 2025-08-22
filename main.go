@@ -1,23 +1,21 @@
 package main
 
 import (
-	"context"
+	"log"
 
-	"github.com/Khaym03/kumo/core"
+	"github.com/Khaym03/kumo/collectors"
+	"github.com/Khaym03/kumo/composer"
 )
 
-type MockCollector struct {
-}
-
-func (mc *MockCollector) Collect(ctx context.Context) error {
-	return nil
-}
-
 func main() {
-	kumo := core.NewKumo()
+	appComposer := composer.NewAppComposer()
+	kumo, err := appComposer.ComposeKumo()
+	if err != nil {
+		log.Fatalf("Error al componer la aplicación: %v", err)
+	}
 	defer kumo.Shutdown()
 
-	kumo.RegisterCollector(&MockCollector{})
+	kumo.RegisterCollector(&collectors.MockCollector{})
 
 	kumo.Run()
 }

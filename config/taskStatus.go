@@ -7,9 +7,9 @@ import (
 	db "github.com/Khaym03/kumo/db/sqlite/gen"
 )
 
-type taskStatus [4]db.TaskStatus
+type TaskStatus [4]db.TaskStatus
 
-func NewTaskStates(queries *db.Queries) *taskStatus {
+func NewTaskStates(queries *db.Queries) *TaskStatus {
 	status, err := queries.GetTaskStatus(context.Background())
 	if err != nil {
 		log.Fatalf("Error at making [TaskStatus] %v", err)
@@ -19,25 +19,25 @@ func NewTaskStates(queries *db.Queries) *taskStatus {
 		log.Fatal("expect 4 status")
 	}
 
-	var taskStates taskStatus
+	var taskStates TaskStatus
 
 	copy(taskStates[:], status)
 
 	return &taskStates
 }
 
-func (ts *taskStatus) Pending() db.TaskStatus {
+func (ts *TaskStatus) Pending() db.TaskStatus {
 	return ts[0]
 }
 
-func (ts *taskStatus) InProgress() db.TaskStatus {
+func (ts *TaskStatus) InProgress() db.TaskStatus {
 	return ts[1]
 }
 
-func (ts *taskStatus) Completed() db.TaskStatus {
+func (ts *TaskStatus) Completed() db.TaskStatus {
 	return ts[2]
 }
 
-func (ts *taskStatus) Failed() db.TaskStatus {
+func (ts *TaskStatus) Failed() db.TaskStatus {
 	return ts[3]
 }
