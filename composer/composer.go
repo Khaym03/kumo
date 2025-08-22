@@ -13,10 +13,27 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type AppComposer struct{}
+type AppComposer struct {
+	conf config.AppConfig
+}
 
 func NewAppComposer() *AppComposer {
-	return &AppComposer{}
+	conn := sqlite.NewSQLiteConn()
+	queries := db.New(conn)
+
+	logger := logrus.New()
+	logger.SetFormatter(&logrus.TextFormatter{
+		ForceColors: true,
+	})
+
+	return &AppComposer{
+		conf: config.NewAppConfig(
+			conn,
+			queries,
+			logger,
+			config.NewTaskStates(queries),
+		),
+	}
 }
 
 // ComposeKumo builds and returns a Kumo instance with all its dependencies.
@@ -24,20 +41,8 @@ func (ac *AppComposer) ComposeKumo() (*core.Kumo, error) {
 	u := launcher.New().Leakless(false).MustLaunch()
 	b := rod.New().ControlURL(u).Trace(true).MustConnect()
 
-	conn := sqlite.NewSQLiteConn()
-	queries := db.New(conn)
-
-	logger := ac.composeLogger()
-
-	conf := config.NewAppConfig(
-		conn,
-		queries,
-		logger,
-		config.NewTaskStates(queries),
-	)
-
 	scheduler := sche.NewScheduler(b, 2)
-	reconciler := controller.NewStateReconciler(conf)
+	reconciler := controller.NewStateReconciler(ac.conf)
 	registry := collectors.NewCollectorRegistry()
 
 	kumo := core.NewKumo(
@@ -45,17 +50,12 @@ func (ac *AppComposer) ComposeKumo() (*core.Kumo, error) {
 		scheduler,
 		registry,
 		reconciler,
-		conf,
+		ac.conf,
 	)
 
 	return kumo, nil
 }
 
-func (ac *AppComposer) composeLogger() *logrus.Logger {
-	logger := logrus.New()
-	logger.SetFormatter(&logrus.TextFormatter{
-		ForceColors: true,
-	})
-
-	return logger
+func (ac *AppComposer) ComposeTaskFetcher() controller.TaskFetcher {
+	return controller.NewTaskFetcher(ac.conf)
 }
