@@ -4,9 +4,9 @@ import (
 	"context"
 	"log"
 
-	"github.com/Khaym03/kumo/collectors"
 	"github.com/Khaym03/kumo/config"
 	"github.com/Khaym03/kumo/controller"
+	"github.com/Khaym03/kumo/ports"
 	sche "github.com/Khaym03/kumo/scheduler"
 	"github.com/go-rod/rod"
 
@@ -18,7 +18,7 @@ type Kumo struct {
 	ctx       context.Context
 	browser   *rod.Browser
 	scheduler sche.Scheduler
-	*collectors.CollectorRegistry
+	ports.CollectorRegistry
 	controller.Reconciler
 	config.AppConfig
 }
@@ -26,7 +26,7 @@ type Kumo struct {
 func NewKumo(
 	browser *rod.Browser,
 	scheduler sche.Scheduler,
-	registry *collectors.CollectorRegistry,
+	registry ports.CollectorRegistry,
 	reconciler controller.Reconciler,
 	appConfig config.AppConfig,
 ) *Kumo {
@@ -45,7 +45,7 @@ func (k *Kumo) Run() {
 		k.Logger.Fatal(err)
 	}
 
-	for _, c := range k.Collectors {
+	for _, c := range k.Collectors() {
 		err := c.Collect(k.ctx)
 		if err != nil {
 			log.Println(err)

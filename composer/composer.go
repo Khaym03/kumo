@@ -1,7 +1,6 @@
 package composer
 
 import (
-	"github.com/Khaym03/kumo/collectors"
 	"github.com/Khaym03/kumo/config"
 	"github.com/Khaym03/kumo/controller"
 	"github.com/Khaym03/kumo/core"
@@ -13,6 +12,9 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// The AppComposer struct acts as the central hub for dependency injection.
+// It holds the application's configuration and knows how to create
+// and connect all other components.
 type AppComposer struct {
 	conf config.AppConfig
 }
@@ -43,7 +45,7 @@ func (ac *AppComposer) ComposeKumo() (*core.Kumo, error) {
 
 	scheduler := sche.NewScheduler(b, 2)
 	reconciler := controller.NewStateReconciler(ac.conf)
-	registry := collectors.NewCollectorRegistry()
+	registry := controller.NewCollectorRegistry()
 
 	kumo := core.NewKumo(
 		b,
