@@ -1,7 +1,7 @@
 -- +goose Up
 -- SQL in this section is executed when the migration is applied.
 CREATE TABLE tasks (
-    id TEXT PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     url TEXT NOT NULL,
     status_id INTEGER NOT NULL,
     retries INTEGER NOT NULL DEFAULT 0,

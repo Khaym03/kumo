@@ -9,7 +9,7 @@ import (
 )
 
 type Task struct {
-	ID        string     `json:"id"`
+	ID        int64      `json:"id"`
 	Url       string     `json:"url"`
 	StatusID  int64      `json:"status_id"`
 	Retries   int64      `json:"retries"`

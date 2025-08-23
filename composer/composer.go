@@ -55,7 +55,3 @@ func (ac *AppComposer) ComposeKumo() (*core.Kumo, error) {
 
 	return kumo, nil
 }
-
-func (ac *AppComposer) ComposeTaskFetcher() controller.TaskFetcher {
-	return controller.NewTaskFetcher(ac.conf)
-}

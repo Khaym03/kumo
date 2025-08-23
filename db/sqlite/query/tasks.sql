@@ -6,8 +6,8 @@ SELECT *
 FROM task_status;
 
 -- name: AddTask :exec
-INSERT INTO tasks (id, url, status_id)
-VALUES (?, ?, ?);
+INSERT INTO tasks (url, status_id)
+VALUES (?, ?);
 
 -- name: ListTasksByStatusID :many
 SELECT * FROM tasks WHERE status_id = ?;
@@ -37,5 +37,8 @@ WHERE id = ?;
 -- name: ListPendingOrFailedTasks :many
 SELECT *
 FROM tasks
-WHERE status_id IN ( ?, ? ) AND retries < 3
+WHERE status_id IN (
+    SELECT id FROM task_status WHERE name IN ('PENDING', 'FAILED')
+)
+AND retries <= 3
 ORDER BY created_at;

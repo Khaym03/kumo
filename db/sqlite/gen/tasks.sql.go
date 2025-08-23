@@ -10,18 +10,17 @@ import (
 )
 
 const addTask = `-- name: AddTask :exec
-INSERT INTO tasks (id, url, status_id)
-VALUES (?, ?, ?)
+INSERT INTO tasks (url, status_id)
+VALUES (?, ?)
 `
 
 type AddTaskParams struct {
-	ID       string `json:"id"`
 	Url      string `json:"url"`
 	StatusID int64  `json:"status_id"`
 }
 
 func (q *Queries) AddTask(ctx context.Context, arg AddTaskParams) error {
-	_, err := q.db.ExecContext(ctx, addTask, arg.ID, arg.Url, arg.StatusID)
+	_, err := q.db.ExecContext(ctx, addTask, arg.Url, arg.StatusID)
 	return err
 }
 
@@ -32,8 +31,8 @@ WHERE id = ?
 `
 
 type FailTaskParams struct {
-	StatusID int64  `json:"status_id"`
-	ID       string `json:"id"`
+	StatusID int64 `json:"status_id"`
+	ID       int64 `json:"id"`
 }
 
 func (q *Queries) FailTask(ctx context.Context, arg FailTaskParams) error {
@@ -114,17 +113,15 @@ func (q *Queries) GetTaskStatus(ctx context.Context) ([]TaskStatus, error) {
 const listPendingOrFailedTasks = `-- name: ListPendingOrFailedTasks :many
 SELECT id, url, status_id, retries, created_at
 FROM tasks
-WHERE status_id IN ( ?, ? ) AND retries < 3
+WHERE status_id IN (
+    SELECT id FROM task_status WHERE name IN ('PENDING', 'FAILED')
+)
+AND retries <= 3
 ORDER BY created_at
 `
 
-type ListPendingOrFailedTasksParams struct {
-	StatusID   int64 `json:"status_id"`
-	StatusID_2 int64 `json:"status_id_2"`
-}
-
-func (q *Queries) ListPendingOrFailedTasks(ctx context.Context, arg ListPendingOrFailedTasksParams) ([]Task, error) {
-	rows, err := q.db.QueryContext(ctx, listPendingOrFailedTasks, arg.StatusID, arg.StatusID_2)
+func (q *Queries) ListPendingOrFailedTasks(ctx context.Context) ([]Task, error) {
+	rows, err := q.db.QueryContext(ctx, listPendingOrFailedTasks)
 	if err != nil {
 		return nil, err
 	}
@@ -192,8 +189,8 @@ WHERE id = ?
 `
 
 type UpdateTaskStatusParams struct {
-	StatusID int64  `json:"status_id"`
-	ID       string `json:"id"`
+	StatusID int64 `json:"status_id"`
+	ID       int64 `json:"id"`
 }
 
 func (q *Queries) UpdateTaskStatus(ctx context.Context, arg UpdateTaskStatusParams) error {

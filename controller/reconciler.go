@@ -38,9 +38,9 @@ func (r *StateReconciler) Reconcile(ctx context.Context) error {
 			)
 
 			if err != nil {
-				r.conf.Logger.Errorf("Failed to re-queue task %s: %v", task.ID, err)
+				r.conf.Logger.Errorf("Failed to re-queue task %d: %v", task.ID, err)
 			} else {
-				r.conf.Logger.Infof("Task %s successfully re-queued.", task.ID)
+				r.conf.Logger.Infof("Task %d successfully re-queued.", task.ID)
 			}
 		}
 	}

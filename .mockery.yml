@@ -1,0 +1,16 @@
+all: false
+dir: mock
+filename: '{{.InterfaceName | snakecase}}_mock.go'
+force-file-write: false
+formatter: goimports
+log-level: info
+structname: '{{.Mock}}{{.InterfaceName}}'
+pkgname: '{{.SrcPackageName}}'
+recursive: false
+template: testify
+packages:
+  packages:
+  github.com/Khaym03/kumo/ports:
+    config:
+      all: true
+      dir: mock/ports
