@@ -26,17 +26,14 @@ func (q *Queries) AddTask(ctx context.Context, arg AddTaskParams) error {
 
 const failTask = `-- name: FailTask :exec
 UPDATE tasks
-SET status_id = ?, retries = retries + 1
-WHERE id = ?
+SET status_id = (
+    SELECT id FROM task_status WHERE name = 'FAILED'
+), retries = retries + 1
+WHERE tasks.id = ?
 `
 
-type FailTaskParams struct {
-	StatusID int64 `json:"status_id"`
-	ID       int64 `json:"id"`
-}
-
-func (q *Queries) FailTask(ctx context.Context, arg FailTaskParams) error {
-	_, err := q.db.ExecContext(ctx, failTask, arg.StatusID, arg.ID)
+func (q *Queries) FailTask(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, failTask, id)
 	return err
 }
 
@@ -49,37 +46,6 @@ func (q *Queries) GetStatusIDByName(ctx context.Context, name string) (int64, er
 	var id int64
 	err := row.Scan(&id)
 	return id, err
-}
-
-const getTaskForProcessing = `-- name: GetTaskForProcessing :one
-UPDATE tasks
-SET status_id = ?
-WHERE id IN (
-    SELECT id
-    FROM tasks AS t
-    WHERE t.status_id = ?
-    ORDER BY t.created_at
-    LIMIT 1
-)
-RETURNING id, url, status_id, retries, created_at
-`
-
-type GetTaskForProcessingParams struct {
-	StatusID   int64 `json:"status_id"`
-	StatusID_2 int64 `json:"status_id_2"`
-}
-
-func (q *Queries) GetTaskForProcessing(ctx context.Context, arg GetTaskForProcessingParams) (Task, error) {
-	row := q.db.QueryRowContext(ctx, getTaskForProcessing, arg.StatusID, arg.StatusID_2)
-	var i Task
-	err := row.Scan(
-		&i.ID,
-		&i.Url,
-		&i.StatusID,
-		&i.Retries,
-		&i.CreatedAt,
-	)
-	return i, err
 }
 
 const getTaskStatus = `-- name: GetTaskStatus :many
