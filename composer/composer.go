@@ -9,6 +9,7 @@ import (
 	sche "github.com/Khaym03/kumo/scheduler"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
+	_ "github.com/go-rod/stealth"
 	"github.com/sirupsen/logrus"
 )
 
