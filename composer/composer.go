@@ -1,14 +1,15 @@
 package composer
 
 import (
+	"log"
+
 	"github.com/Khaym03/kumo/config"
 	"github.com/Khaym03/kumo/controller"
 	"github.com/Khaym03/kumo/core"
 	sqlite "github.com/Khaym03/kumo/db/sqlite"
 	db "github.com/Khaym03/kumo/db/sqlite/gen"
+	"github.com/Khaym03/kumo/proxy"
 	sche "github.com/Khaym03/kumo/scheduler"
-	"github.com/go-rod/rod"
-	"github.com/go-rod/rod/lib/launcher"
 	_ "github.com/go-rod/stealth"
 	"github.com/sirupsen/logrus"
 )
@@ -18,7 +19,12 @@ import (
 // and connect all other components.
 type AppComposer struct {
 	conf config.AppConfig
+	*BrowserFactory
+	config.RemoteConfig
+	proxies []proxy.Proxy
 }
+
+const limitOfBrowserInstances = 1
 
 func NewAppComposer() *AppComposer {
 	conn := sqlite.NewSQLiteConn()
@@ -29,6 +35,13 @@ func NewAppComposer() *AppComposer {
 		ForceColors: true,
 	})
 
+	rmc := config.NewRemoteConfig()
+
+	p, err := proxy.NewWebshareProxyProvider().Download()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	return &AppComposer{
 		conf: config.NewAppConfig(
 			conn,
@@ -36,13 +49,20 @@ func NewAppComposer() *AppComposer {
 			logger,
 			config.NewTaskStates(queries),
 		),
+		BrowserFactory: NewBroserFactory(rmc, p, limitOfBrowserInstances),
+		proxies:        p,
 	}
 }
 
 // ComposeKumo builds and returns a Kumo instance with all its dependencies.
 func (ac *AppComposer) ComposeKumo() (*core.Kumo, error) {
-	u := launcher.New().Leakless(false).MustLaunch()
-	b := rod.New().ControlURL(u).Trace(true).MustConnect()
+	// fill the browser pull
+	b, err := ac.BrowserFactory.Get(
+		ac.BrowserFactory.LocalBrowserCreator,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	scheduler := sche.NewScheduler(b, 2)
 	reconciler := controller.NewStateReconciler(ac.conf)

@@ -20,6 +20,10 @@ type Proxy struct {
 	Password string
 }
 
+func (p Proxy) Address() string {
+	return fmt.Sprintf("%s:%s", p.Host, p.Port)
+}
+
 const (
 	proxyURLScheme = "http"
 )
