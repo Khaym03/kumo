@@ -5,13 +5,14 @@ import (
 	"net"
 	"net/http"
 
+	"github.com/Khaym03/kumo/controller"
 	"github.com/go-rod/rod/lib/utils"
 )
 
 func main() {
 	flag.Parse()
 
-	m := NewMultiManager()
+	m := controller.NewMultiManager()
 
 	l, err := net.Listen("tcp", ":8000")
 	if err != nil {
