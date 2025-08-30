@@ -1,11 +1,11 @@
 package main
 
 import (
-	"log"
 	"time"
 
 	"github.com/Khaym03/kumo/composer"
 	"github.com/joho/godotenv"
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -32,4 +32,8 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	log.SetFormatter(&log.TextFormatter{
+		ForceColors: true,
+	})
 }

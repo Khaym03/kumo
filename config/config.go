@@ -21,13 +21,11 @@ type AppConfig struct {
 func NewAppConfig(
 	DB *sql.DB,
 	queries *db.Queries,
-	logger *logrus.Logger,
 	ts ports.TaskStatus,
 ) AppConfig {
 	return AppConfig{
 		Queries:    queries,
 		TaskStatus: ts,
-		Logger:     logger,
 		DB:         DB,
 	}
 }

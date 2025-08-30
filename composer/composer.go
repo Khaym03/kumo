@@ -1,8 +1,6 @@
 package composer
 
 import (
-	"log"
-
 	"github.com/Khaym03/kumo/config"
 	"github.com/Khaym03/kumo/controller"
 	"github.com/Khaym03/kumo/core"
@@ -11,7 +9,7 @@ import (
 	"github.com/Khaym03/kumo/proxy"
 	sche "github.com/Khaym03/kumo/scheduler"
 	_ "github.com/go-rod/stealth"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 // The AppComposer struct acts as the central hub for dependency injection.
@@ -30,11 +28,6 @@ func NewAppComposer() *AppComposer {
 	conn := sqlite.NewSQLiteConn()
 	queries := db.New(conn)
 
-	logger := logrus.New()
-	logger.SetFormatter(&logrus.TextFormatter{
-		ForceColors: true,
-	})
-
 	rmc := config.NewRemoteConfig()
 
 	p, err := proxy.NewWebshareProxyProvider().Download()
@@ -46,7 +39,6 @@ func NewAppComposer() *AppComposer {
 		conf: config.NewAppConfig(
 			conn,
 			queries,
-			logger,
 			config.NewTaskStates(queries),
 		),
 		BrowserFactory: NewBroserFactory(rmc, p, limitOfBrowserInstances),
