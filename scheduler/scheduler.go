@@ -3,6 +3,7 @@ package scheduler
 import (
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/proto"
+	"github.com/go-rod/stealth"
 )
 
 type Scheduler interface {
@@ -26,7 +27,17 @@ func NewScheduler(b *rod.Browser, limit int) *scheduler {
 
 func (s scheduler) Get() (*rod.Page, error) {
 	return s.pool.Get(func() (*rod.Page, error) {
-		return s.browser.Page(proto.TargetCreateTarget{})
+		page, err := s.browser.Page(proto.TargetCreateTarget{})
+		if err != nil {
+			return nil, err
+		}
+
+		_, err = page.EvalOnNewDocument(stealth.JS)
+		if err != nil {
+			return nil, err
+		}
+
+		return page, nil
 	})
 }
 
