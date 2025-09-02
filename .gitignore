@@ -1,2 +1,4 @@
 .env
 example.png
+data/
+!data/.gitkeep
