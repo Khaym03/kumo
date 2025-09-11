@@ -41,7 +41,7 @@ func NewAppComposer() *AppComposer {
 
 	pm := proxy.NewConcurrentProxyManager(p)
 
-	browsers := createCreatorsFromConfig(conf.Browsers, pm)
+	browsers := browser.CreateCreatorsFromConfig(conf.Browsers, pm)
 
 	return &AppComposer{
 		conf: config.NewAppConfig(
@@ -76,38 +76,4 @@ func (ac *AppComposer) ComposeKumo() (*core.Kumo, error) {
 	)
 
 	return kumo, nil
-}
-
-func createCreatorsFromConfig(configs []config.BrowserConfig, pm proxy.ProxyManager) []browser.BrowserCreator {
-	creators := make([]browser.BrowserCreator, 0, len(configs))
-
-	for _, bc := range configs {
-		var creator browser.BrowserCreator
-		var opts []browser.Option
-
-		// If the config specifies a proxy, get one and add it as an option.
-		if bc.Proxy {
-			p, err := pm.Get()
-			if err != nil {
-				log.Printf("Failed to get proxy for browser %s: %v. Skipping creator.", bc.Name, err)
-				continue
-			}
-			opts = append(opts, browser.WithProxy(p))
-		}
-
-		// Create the correct type of creator and pass the options.
-		switch bc.Type {
-		case "local":
-			creator = browser.NewLocalBrowserCreator(opts...)
-		case "remote":
-			opts = append(opts, browser.WithRemoteHost(bc.Host))
-			creator = browser.NewRemoteBrowserCreator(opts...)
-		default:
-			log.Fatalf("Unknown browser type: %s", bc.Type)
-		}
-
-		creators = append(creators, creator)
-	}
-
-	return creators
 }
