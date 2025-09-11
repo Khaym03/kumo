@@ -24,6 +24,10 @@ func (p Proxy) Address() string {
 	return fmt.Sprintf("%s:%s", p.Host, p.Port)
 }
 
+func (p Proxy) RequireAuth() bool {
+	return p.User != "" && p.Password != ""
+}
+
 const (
 	proxyURLScheme = "http"
 )

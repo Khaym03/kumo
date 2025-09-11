@@ -1,0 +1,43 @@
+package browser
+
+import (
+	"log"
+	"sync"
+
+	"github.com/go-rod/rod"
+)
+
+// BrowserFactory orchestrates the creation and pooling of browsers.
+type BrowserFactory struct {
+	rod.Pool[rod.Browser]
+	creators []BrowserCreator
+	mu       sync.Mutex
+	next     int
+}
+
+// NewBrowserFactory creates a BrowserFactory. It infers the pool size
+// from the number of BrowserCreator instances provided.
+func NewFactory(creators ...BrowserCreator) *BrowserFactory {
+	if len(creators) == 0 {
+		log.Fatal("No browser creators provided. Cannot create a browser factory.")
+	}
+
+	return &BrowserFactory{
+		creators: creators,
+		Pool:     rod.NewBrowserPool(len(creators)),
+		mu:       sync.Mutex{},
+	}
+}
+
+// Get gets a browser from the pool, creating one if needed.
+func (bf *BrowserFactory) Get() (*rod.Browser, error) {
+	return bf.Pool.Get(func() (*rod.Browser, error) {
+		// Select a creator in a thread-safe, round-robin manner.
+		bf.mu.Lock()
+		creator := bf.creators[bf.next]
+		bf.next = (bf.next + 1) % len(bf.creators)
+		bf.mu.Unlock()
+
+		return creator.CreateBrowser()
+	})
+}

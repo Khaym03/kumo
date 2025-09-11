@@ -1,3 +1,13 @@
-remotePort: 8000
-remoteHosts:
-  - 192.168.101.2
+browsers:
+  - type: local
+    name: local-browser-1
+  - type: local
+    name: proxy-browser-1
+    proxy: true
+  - type: remote
+    name: remote-browser-1
+    host: 192.168.101.2:8000
+  - type: remote
+    host: 192.168.101.2:8000
+    name: remote-browser-2
+    proxy: true
