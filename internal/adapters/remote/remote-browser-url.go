@@ -1,10 +1,10 @@
-package controller
+package remote
 
 import (
 	"fmt"
 	"net/url"
 
-	"github.com/Khaym03/kumo/pkg/proxy"
+	"github.com/Khaym03/kumo/internal/pkg/proxy"
 	"github.com/google/uuid"
 )
 

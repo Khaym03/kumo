@@ -1,6 +1,6 @@
-package controller
+package adapters
 
-import "github.com/Khaym03/kumo/ports"
+import "github.com/Khaym03/kumo/internal/ports"
 
 type collectorsRegister struct {
 	collectors []ports.Collector

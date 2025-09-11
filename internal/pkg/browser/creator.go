@@ -1,8 +1,9 @@
 package browser
 
 import (
-	"github.com/Khaym03/kumo/controller"
-	"github.com/Khaym03/kumo/pkg/proxy"
+	"github.com/Khaym03/kumo/internal/adapters/remote"
+	"github.com/Khaym03/kumo/internal/pkg/proxy"
+
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
 	"github.com/go-rod/rod/lib/launcher/flags"
@@ -98,11 +99,11 @@ func (r *RemoteBrowserCreator) CreateBrowser() (*rod.Browser, error) {
 	var err error
 
 	if r.options.Proxy != nil {
-		url, err = controller.NewWSURLBuilder(r.options.MachineAddress).
+		url, err = remote.NewWSURLBuilder(r.options.MachineAddress).
 			WithProxy(*r.options.Proxy).
 			Build()
 	} else {
-		url, err = controller.NewWSURLBuilder(r.options.MachineAddress).Build()
+		url, err = remote.NewWSURLBuilder(r.options.MachineAddress).Build()
 	}
 
 	if err != nil {

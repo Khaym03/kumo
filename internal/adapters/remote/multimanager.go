@@ -1,4 +1,4 @@
-package controller
+package remote
 
 import (
 	"encoding/json"

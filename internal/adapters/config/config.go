@@ -1,34 +1,11 @@
 package config
 
 import (
-	"database/sql"
-	"log"
 	"os"
 
-	db "github.com/Khaym03/kumo/db/sqlite/gen"
-	"github.com/Khaym03/kumo/ports"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
-
-type AppConfig struct {
-	Queries    *db.Queries
-	Logger     *logrus.Logger
-	TaskStatus ports.TaskStatus
-	DB         *sql.DB
-}
-
-func NewAppConfig(
-	DB *sql.DB,
-	queries *db.Queries,
-	ts ports.TaskStatus,
-) AppConfig {
-	return AppConfig{
-		Queries:    queries,
-		TaskStatus: ts,
-		DB:         DB,
-	}
-}
 
 type Config struct {
 	Browsers []BrowserConfig `yaml:"browsers"`

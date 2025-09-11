@@ -5,14 +5,14 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/Khaym03/kumo/controller"
+	"github.com/Khaym03/kumo/internal/adapters/remote"
 	"github.com/go-rod/rod/lib/utils"
 )
 
 func main() {
 	flag.Parse()
 
-	m := controller.NewMultiManager()
+	m := remote.NewMultiManager()
 
 	l, err := net.Listen("tcp", ":8000")
 	if err != nil {
