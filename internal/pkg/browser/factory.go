@@ -11,8 +11,8 @@ import (
 )
 
 // BrowserFactory orchestrates the creation and pooling of browsers.
-type BrowserFactory struct {
-	rod.Pool[rod.Browser]
+type BrowserPool struct {
+	pool     rod.Pool[rod.Browser]
 	creators []BrowserCreator
 	mu       sync.Mutex
 	next     int
@@ -20,29 +20,33 @@ type BrowserFactory struct {
 
 // NewBrowserFactory creates a BrowserFactory. It infers the pool size
 // from the number of BrowserCreator instances provided.
-func NewFactory(creators ...BrowserCreator) *BrowserFactory {
+func NewPool(creators ...BrowserCreator) *BrowserPool {
 	if len(creators) == 0 {
 		log.Fatal("No browser creators provided. Cannot create a browser factory.")
 	}
 
-	return &BrowserFactory{
+	return &BrowserPool{
 		creators: creators,
-		Pool:     rod.NewBrowserPool(len(creators)),
+		pool:     rod.NewPool[rod.Browser](len(creators)),
 		mu:       sync.Mutex{},
 	}
 }
 
 // Get gets a browser from the pool, creating one if needed.
-func (bf *BrowserFactory) Get() (*rod.Browser, error) {
-	return bf.Pool.Get(func() (*rod.Browser, error) {
+func (bp *BrowserPool) Get() (*rod.Browser, error) {
+	return bp.pool.Get(func() (*rod.Browser, error) {
 		// Select a creator in a thread-safe, round-robin manner.
-		bf.mu.Lock()
-		creator := bf.creators[bf.next]
-		bf.next = (bf.next + 1) % len(bf.creators)
-		bf.mu.Unlock()
+		bp.mu.Lock()
+		creator := bp.creators[bp.next]
+		bp.next = (bp.next + 1) % len(bp.creators)
+		bp.mu.Unlock()
 
 		return creator.CreateBrowser()
 	})
+}
+
+func (bp *BrowserPool) Put(b *rod.Browser) {
+	bp.pool.Put(b)
 }
 
 func CreateCreatorsFromConfig(configs []config.BrowserConfig, pm proxy.ProxyManager) []BrowserCreator {

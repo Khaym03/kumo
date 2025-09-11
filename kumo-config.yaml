@@ -1,3 +1,5 @@
+numOfPagesPerBrowser: 2
+retryCount: 1
 browsers:
   - type: local
     name: local-browser-1

@@ -8,7 +8,9 @@ import (
 )
 
 type Config struct {
-	Browsers []BrowserConfig `yaml:"browsers"`
+	Browsers             []BrowserConfig `yaml:"browsers"`
+	NumOfPagesPerBrowser int             `yaml:"numOfPagesPerBrowser"`
+	RetryCount           int             `yaml:"retryCount"`
 }
 
 type BrowserConfig struct {
