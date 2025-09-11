@@ -7,7 +7,8 @@ import (
 	sqlite "github.com/Khaym03/kumo/db/sqlite"
 	db "github.com/Khaym03/kumo/db/sqlite/gen"
 	"github.com/Khaym03/kumo/pkg/browser"
-	"github.com/Khaym03/kumo/proxy"
+	"github.com/Khaym03/kumo/pkg/proxy"
+
 	sche "github.com/Khaym03/kumo/scheduler"
 	_ "github.com/go-rod/stealth"
 	log "github.com/sirupsen/logrus"
@@ -23,8 +24,6 @@ type AppComposer struct {
 	config.Config
 	proxies []proxy.Proxy
 }
-
-// const limitOfBrowserInstances = 1
 
 func NewAppComposer() *AppComposer {
 	conn := sqlite.NewSQLiteConn()

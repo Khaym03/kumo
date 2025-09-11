@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/Khaym03/kumo/config"
-	"github.com/Khaym03/kumo/proxy"
+	"github.com/Khaym03/kumo/pkg/proxy"
 	"github.com/go-rod/rod"
 )
 

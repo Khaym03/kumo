@@ -2,7 +2,7 @@ package browser
 
 import (
 	"github.com/Khaym03/kumo/controller"
-	"github.com/Khaym03/kumo/proxy"
+	"github.com/Khaym03/kumo/pkg/proxy"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
 	"github.com/go-rod/rod/lib/launcher/flags"

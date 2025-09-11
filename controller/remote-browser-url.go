@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/Khaym03/kumo/proxy"
+	"github.com/Khaym03/kumo/pkg/proxy"
 	"github.com/google/uuid"
 )
 
