@@ -6,7 +6,6 @@ import (
 
 	"github.com/Khaym03/kumo/internal/ports"
 
-	sche "github.com/Khaym03/kumo/scheduler"
 	"github.com/go-rod/rod"
 
 	_ "github.com/PuerkitoBio/goquery"
@@ -14,20 +13,20 @@ import (
 )
 
 type Kumo struct {
-	ctx       context.Context
-	browser   *rod.Browser
-	scheduler sche.Scheduler
+	ctx      context.Context
+	browser  *rod.Browser
+	pagePool ports.PagePool
 	ports.CollectorRegistry
 }
 
 func NewKumo(
 	browser *rod.Browser,
-	scheduler sche.Scheduler,
+	pagePool ports.PagePool,
 	registry ports.CollectorRegistry,
 ) *Kumo {
 	return &Kumo{
 		browser:           browser,
-		scheduler:         scheduler,
+		pagePool:          pagePool,
 		CollectorRegistry: registry,
 	}
 }

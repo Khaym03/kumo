@@ -49,6 +49,10 @@ func (bp *BrowserPool) Put(b *rod.Browser) {
 	bp.pool.Put(b)
 }
 
+func (bp *BrowserPool) Size() int {
+	return len(bp.creators)
+}
+
 func CreateCreatorsFromConfig(configs []config.BrowserConfig, pm proxy.ProxyManager) []BrowserCreator {
 	creators := make([]BrowserCreator, 0, len(configs))
 

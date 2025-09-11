@@ -1,46 +1,59 @@
-package scheduler
+package pagepool
 
 import (
+	"github.com/Khaym03/kumo/internal/pkg/browser"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/proto"
-	"github.com/go-rod/stealth"
 )
 
-type Scheduler interface {
-	Get() (*rod.Page, error)
-	Put(*rod.Page)
+// PageSetupFunc is a "hook" function type.
+type PageSetupFunc func(page *rod.Page) error
+
+// PagePool manages a pool of pages by using a browser pool.
+type PagePool struct {
+	browserPool  *browser.BrowserPool
+	pool         rod.Pool[rod.Page]
+	pageSetupFns []PageSetupFunc
 }
 
-type scheduler struct {
-	browser *rod.Browser
-	pool    rod.Pool[rod.Page]
-}
+// NewPagePool creates a new PagePool instance.
+func NewPagePool(bp *browser.BrowserPool, numOfPagePerBrowser int, pageSetupFns ...PageSetupFunc) *PagePool {
+	size := numOfPagePerBrowser * bp.Size()
 
-func NewScheduler(b *rod.Browser, limit int) *scheduler {
-	pool := rod.NewPagePool(limit)
-
-	return &scheduler{
-		browser: b,
-		pool:    pool,
+	return &PagePool{
+		browserPool:  bp,
+		pool:         rod.NewPagePool(size),
+		pageSetupFns: pageSetupFns,
 	}
 }
 
-func (s scheduler) Get() (*rod.Page, error) {
-	return s.pool.Get(func() (*rod.Page, error) {
-		page, err := s.browser.Page(proto.TargetCreateTarget{})
+// Get gets a page from the pool, creating one if needed.
+func (pp *PagePool) Get() (*rod.Page, error) {
+	return pp.pool.Get(func() (*rod.Page, error) {
+		browser, err := pp.browserPool.Get()
+		if err != nil {
+			return nil, err
+		}
+		defer pp.browserPool.Put(browser)
+
+		page, err := browser.Page(proto.TargetCreateTarget{})
 		if err != nil {
 			return nil, err
 		}
 
-		_, err = page.EvalOnNewDocument(stealth.JS)
-		if err != nil {
-			return nil, err
+		for _, setupFunc := range pp.pageSetupFns {
+			if err := setupFunc(page); err != nil {
+				page.Close()
+				return nil, err
+			}
 		}
 
 		return page, nil
 	})
 }
 
-func (s scheduler) Put(p *rod.Page) {
-	s.pool.Put(p)
+// Put returns a page to the pool. The user is responsible for
+// also returning the browser via page.Browser().
+func (pp *PagePool) Put(p *rod.Page) {
+	pp.pool.Put(p)
 }
