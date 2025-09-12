@@ -12,10 +12,11 @@ import (
 
 // BrowserFactory orchestrates the creation and pooling of browsers.
 type BrowserPool struct {
-	pool     rod.Pool[rod.Browser]
-	creators []BrowserCreator
-	mu       sync.Mutex
-	next     int
+	pool          rod.Pool[rod.Browser]
+	creators      []BrowserCreator
+	mu, browserMu sync.Mutex
+	browsers      []*rod.Browser
+	next          int
 }
 
 // NewBrowserFactory creates a BrowserFactory. It infers the pool size
@@ -26,9 +27,11 @@ func NewPool(creators ...BrowserCreator) *BrowserPool {
 	}
 
 	return &BrowserPool{
-		creators: creators,
-		pool:     rod.NewPool[rod.Browser](len(creators)),
-		mu:       sync.Mutex{},
+		creators:  creators,
+		pool:      rod.NewPool[rod.Browser](len(creators)),
+		mu:        sync.Mutex{},
+		browsers:  make([]*rod.Browser, 0, len(creators)),
+		browserMu: sync.Mutex{},
 	}
 }
 
@@ -41,12 +44,42 @@ func (bp *BrowserPool) Get() (*rod.Browser, error) {
 		bp.next = (bp.next + 1) % len(bp.creators)
 		bp.mu.Unlock()
 
-		return creator.CreateBrowser()
+		browser, err := creator.CreateBrowser()
+		if err != nil {
+			return nil, err
+		}
+
+		// Store the browser instance in the slice for later cleanup
+		bp.browserMu.Lock()
+		bp.browsers = append(bp.browsers, browser)
+		bp.browserMu.Unlock()
+
+		return browser, nil
 	})
 }
 
 func (bp *BrowserPool) Put(b *rod.Browser) {
 	bp.pool.Put(b)
+}
+
+// Close closes all the browsers managed by the pool.
+func (bp *BrowserPool) Close() error {
+	log.Println("Closing all browsers in the pool...")
+
+	bp.browserMu.Lock()
+	defer bp.browserMu.Unlock()
+
+	for _, b := range bp.browsers {
+		if b != nil {
+			log.Printf("Closing browser at: %s", b.BrowserContextID)
+			b.MustClose()
+		}
+	}
+
+	bp.browsers = nil
+	log.Println("All browsers have been closed.")
+
+	return nil
 }
 
 func (bp *BrowserPool) Size() int {
