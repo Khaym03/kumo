@@ -11,6 +11,8 @@ type Config struct {
 	Browsers             []BrowserConfig `yaml:"browsers"`
 	NumOfPagesPerBrowser int             `yaml:"numOfPagesPerBrowser"`
 	RetryCount           int             `yaml:"retryCount"`
+	StorageDir           string          `yaml:"storageDir"`
+	AllowBadgerLogger    bool            `yaml:"allowBadgerLogger"`
 }
 
 type BrowserConfig struct {

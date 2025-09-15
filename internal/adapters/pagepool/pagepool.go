@@ -14,6 +14,7 @@ type PagePool struct {
 	browserPool  *browser.BrowserPool
 	pool         rod.Pool[rod.Page]
 	pageSetupFns []PageSetupFunc
+	size         int
 }
 
 // NewPagePool creates a new PagePool instance.
@@ -24,6 +25,7 @@ func NewPagePool(bp *browser.BrowserPool, numOfPagePerBrowser int, pageSetupFns 
 		browserPool:  bp,
 		pool:         rod.NewPagePool(size),
 		pageSetupFns: pageSetupFns,
+		size:         size,
 	}
 }
 
@@ -56,4 +58,8 @@ func (pp *PagePool) Get() (*rod.Page, error) {
 // also returning the browser via page.Browser().
 func (pp *PagePool) Put(p *rod.Page) {
 	pp.pool.Put(p)
+}
+
+func (pp *PagePool) Size() int {
+	return pp.size
 }

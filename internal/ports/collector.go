@@ -16,9 +16,10 @@ type Collector interface {
 		page *rod.Page,
 		req *types.Request,
 		queue Enqueuer,
+		fs FileStorage,
 	) error
 
-	Name() string
+	String() string
 }
 
 // Designed to manage and organize multiple Collector instances

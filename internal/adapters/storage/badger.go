@@ -2,11 +2,10 @@ package storage
 
 import (
 	"encoding/json"
-	"log"
 
 	"github.com/Khaym03/kumo/internal/pkg/types"
-	"github.com/Khaym03/kumo/internal/ports"
 	badger "github.com/dgraph-io/badger/v4"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -18,14 +17,19 @@ type BadgerDBStore struct {
 	db *badger.DB
 }
 
-func NewBadgerDBStore(dbPath string) (ports.PersistenceStore, error) {
+func NewBadgerDB(dbPath string, allowLogger bool) (*badger.DB, error) {
 	opts := badger.DefaultOptions(dbPath)
 	opts.ValueLogFileSize = 32 << 20 // 32MB
-	db, err := badger.Open(opts)
-	if err != nil {
-		return nil, err
+	if !allowLogger {
+		opts.Logger = nil
+
 	}
-	return &BadgerDBStore{db: db}, nil
+
+	return badger.Open(opts)
+}
+
+func NewBadgerDBStore(db *badger.DB) *BadgerDBStore {
+	return &BadgerDBStore{db: db}
 }
 
 func (b *BadgerDBStore) SavePending(requests ...*types.Request) error {
@@ -57,12 +61,12 @@ func (b *BadgerDBStore) LoadPending() ([]*types.Request, error) {
 			item := it.Item()
 			val, err := item.ValueCopy(nil)
 			if err != nil {
-				log.Printf("Error copying value: %v", err)
+				log.Warnf("Error copying value: %v", err)
 				continue
 			}
 			var req types.Request
 			if err := json.Unmarshal(val, &req); err != nil {
-				log.Printf("Error unmarshalling request: %v", err)
+				log.Warnf("Error unmarshalling request: %v", err)
 				continue
 			}
 			requests = append(requests, &req)

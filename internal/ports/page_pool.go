@@ -8,6 +8,7 @@ import (
 type PagePool interface {
 	Get() (*rod.Page, error)
 	Put(*rod.Page)
+	Size() int
 }
 
 type BrowserPool interface {
@@ -26,4 +27,11 @@ type PersistenceStore interface {
 	IsCompleted(url string) (bool, error)
 
 	Close() error
+}
+
+type FileStorage interface {
+	SaveHTML(key string, data []byte) error
+	SavePDF(key string, data []byte) error
+	GetHTML(key string) ([]byte, error)
+	GetPDF(key string) ([]byte, error)
 }

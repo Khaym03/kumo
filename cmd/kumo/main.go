@@ -24,21 +24,22 @@ func main() {
 	pp := pagepool.NewPagePool(browserPool, conf.NumOfPagesPerBrowser)
 
 	mockCollector := adapters.NewMockCollector()
-	db, err := storage.NewBadgerDBStore("./temp/requestDB")
+
+	dbConn, err := storage.NewBadgerDB(conf.StorageDir, conf.AllowBadgerLogger)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	kumo := core.NewKumoEngine(browserPool, pp, db, mockCollector)
+	db := storage.NewBadgerDBStore(dbConn)
+
+	kumo := core.NewKumoEngine(browserPool, pp, db, db, mockCollector)
 
 	initialRequest := &types.Request{
 		URL:       "https://example.com",
-		Collector: mockCollector.Name(),
+		Collector: mockCollector.String(),
 	}
 
-	kumo.InitialReqs(initialRequest)
-
-	kumo.Run()
+	kumo.Run(initialRequest)
 	// kumo.Shutdown()
 
 }

@@ -2,7 +2,6 @@ package core
 
 import (
 	"context"
-
 	"sync"
 
 	"github.com/Khaym03/kumo/internal/pkg/types"
@@ -15,113 +14,91 @@ import (
 
 type KumoEngine struct {
 	ctx        context.Context
-	queue      types.RequestQueue
+	queue      chan *types.Request
 	wg         *sync.WaitGroup
+	mu         *sync.Mutex
 	collectors map[string]ports.Collector
 	ports.BrowserPool
 	ports.PagePool
-	reqStore ports.PersistenceStore
+	fs           ports.FileStorage
+	reqStore     ports.PersistenceStore
+	workersCount int
 }
 
 func NewKumoEngine(
 	bp ports.BrowserPool,
 	pp ports.PagePool,
 	rs ports.PersistenceStore,
+	fs ports.FileStorage,
 	cs ...ports.Collector,
 ) *KumoEngine {
 	m := map[string]ports.Collector{}
-
 	for _, c := range cs {
-		m[c.Name()] = c
+		m[c.String()] = c
 	}
 
 	return &KumoEngine{
-		ctx:         context.Background(),
-		queue:       make(types.RequestQueue, 100),
-		wg:          new(sync.WaitGroup),
-		BrowserPool: bp,
-		PagePool:    pp,
-		collectors:  m,
-		reqStore:    rs,
+		ctx:          context.Background(),
+		queue:        make(chan *types.Request, 100),
+		wg:           new(sync.WaitGroup),
+		mu:           &sync.Mutex{},
+		BrowserPool:  bp,
+		PagePool:     pp,
+		collectors:   m,
+		reqStore:     rs,
+		fs:           fs,
+		workersCount: pp.Size(),
 	}
 }
 
-func (k *KumoEngine) Run() error {
+func (k *KumoEngine) Run(initialReqs ...*types.Request) error {
 	log.Println("Starting Kumo engine...")
 
+	// Phase 1: Check for pending requests and enqueue them.
 	pending, err := k.reqStore.LoadPending()
 	if err != nil {
 		return err
 	}
 
-	if len(pending) == 0 {
-		log.Info("all URLs were processed")
-		return nil
+	if len(pending) > 0 {
+		log.Infof("Resuming from previous crawl with %d pending requests.", len(pending))
+		k.Enqueue(pending...)
+	} else {
+		// Only enqueue initial requests if there are no pending requests from a previous run.
+		if len(initialReqs) > 0 {
+			log.Info("Starting new crawl with initial requests.")
+			k.Enqueue(initialReqs...)
+		} else {
+			log.Info("No initial requests and no pending requests. Exiting.")
+			return nil
+		}
 	}
 
-	log.Infof("Pending requests %d", len(pending))
+	// Start workers first
+	workersWaitGrp := sync.WaitGroup{}
+	workersWaitGrp.Add(k.workersCount)
+	for i := 1; i <= k.workersCount; i++ {
+		go k.worker(k.ctx, &workersWaitGrp, i)
+	}
 
-	k.Enqueue(pending...)
+	// Wait for all tasks to be completed.
+	k.wg.Wait()
 
-	go k.worker(k.ctx, 1)
+	// Signal workers to stop by closing the queue.
+	close(k.queue)
 
-	k.wg.Wait()    // Wait for all tasks to be completed.
-	close(k.queue) // Signal the worker to stop by closing the queue.
+	// Wait for all workers to shut down cleanly.
+	workersWaitGrp.Wait()
+
+	log.Info("All URLs were processed, and workers have shut down.")
 
 	return k.Shutdown()
 }
 
-func (k *KumoEngine) worker(ctx context.Context, id int) {
-	for {
-		select {
-		case req, ok := <-k.queue:
-			if !ok {
-				log.Println("Queue closed so return")
-				return
-			}
-			log.Printf("Worker %d processing URL: %s", id, req.URL)
-
-			collector, ok := k.collectors[req.Collector]
-			if !ok {
-				log.Printf("No collector found for: %s", req.Collector)
-				k.wg.Done()
-				continue
-			}
-
-			page, err := k.PagePool.Get()
-			if err != nil {
-				log.Println("Error getting page from pool:", err)
-				k.wg.Done()
-				continue
-			}
-
-			err = collector.ProcessPage(ctx, page, req, k)
-			if err != nil {
-				log.Warn("Error processing page:", err)
-			} else {
-				// On successful completion, update the store.
-				if err := k.reqStore.SaveCompleted(req); err != nil {
-					log.Printf("Error saving completed request: %v", err)
-				}
-				if err := k.reqStore.RemoveFromPending(req); err != nil {
-					log.Printf("Error removing from pending: %v", err)
-				}
-			}
-
-			k.PagePool.Put(page)
-			k.wg.Done()
-		case <-ctx.Done():
-			log.Printf("Worker %d shutting down.", id)
-			return
-		}
-	}
-}
-
-func (k *KumoEngine) InitialReqs(r ...*types.Request) {
-	k.Enqueue(r...)
-}
-
 func (k *KumoEngine) Enqueue(r ...*types.Request) {
+	k.mu.Lock()
+	defer k.mu.Unlock()
+
 	requestsToSave := []*types.Request{}
 	for _, req := range r {
 		isCompleted, err := k.reqStore.IsCompleted(req.URL)
@@ -144,7 +121,56 @@ func (k *KumoEngine) Enqueue(r ...*types.Request) {
 	}
 
 	k.wg.Add(len(requestsToSave))
-	k.queue.Enqueue(requestsToSave...)
+	for _, req := range requestsToSave {
+		k.queue <- req
+	}
+}
+
+func (k *KumoEngine) worker(ctx context.Context, wg *sync.WaitGroup, id int) {
+	defer wg.Done()
+
+	for {
+		select {
+		case req, ok := <-k.queue:
+			if !ok {
+				log.Printf("Worker %d queue closed. Exiting...", id)
+				return
+			}
+			log.Printf("Worker %d processing URL: %s", id, req.URL)
+
+			collector, ok := k.collectors[req.Collector]
+			if !ok {
+				log.Printf("No collector found for: %s", req.Collector)
+				k.wg.Done()
+				continue
+			}
+
+			page, err := k.PagePool.Get()
+			if err != nil {
+				log.Println("Error getting page from pool:", err)
+				k.wg.Done()
+				continue
+			}
+
+			err = collector.ProcessPage(ctx, page, req, k, k.fs)
+			if err != nil {
+				log.Warn("Error processing page:", err)
+			} else {
+				if err := k.reqStore.SaveCompleted(req); err != nil {
+					log.Printf("Error saving completed request: %v", err)
+				}
+				if err := k.reqStore.RemoveFromPending(req); err != nil {
+					log.Printf("Error removing from pending: %v", err)
+				}
+			}
+
+			k.PagePool.Put(page)
+			k.wg.Done()
+		case <-ctx.Done():
+			log.Printf("Worker %d shutting down gracefully.", id)
+			return
+		}
+	}
 }
 
 func (k *KumoEngine) Shutdown() error {
