@@ -25,7 +25,6 @@ func (m MockCollector) ProcessPage(
 	page *rod.Page,
 	req *types.Request,
 	queue ports.Enqueuer,
-	ds ports.DataSink,
 ) error {
 	log.Info("collecting something")
 	page.MustNavigate(req.URL)

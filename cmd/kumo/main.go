@@ -4,7 +4,7 @@ import (
 	adapters "github.com/Khaym03/kumo/internal/adapters/collector"
 	"github.com/Khaym03/kumo/internal/adapters/config"
 	"github.com/Khaym03/kumo/internal/adapters/pagepool"
-	sinks "github.com/Khaym03/kumo/internal/adapters/storage"
+	"github.com/Khaym03/kumo/internal/adapters/storage"
 	"github.com/Khaym03/kumo/internal/core"
 	"github.com/Khaym03/kumo/internal/pkg/browser"
 	"github.com/Khaym03/kumo/internal/pkg/proxy"
@@ -23,14 +23,13 @@ func main() {
 	browserPool := browser.NewPool(creators...)
 	pp := pagepool.NewPagePool(browserPool, conf.NumOfPagesPerBrowser)
 
-	ds, err := sinks.NewHTMLFileSink("test/")
+	mockCollector := adapters.NewMockCollector()
+	db, err := storage.NewBadgerDBStore("./temp/requestDB")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	mockCollector := adapters.NewMockCollector()
-
-	kumo := core.NewKumoEngine(browserPool, pp, ds, mockCollector)
+	kumo := core.NewKumoEngine(browserPool, pp, db, mockCollector)
 
 	initialRequest := &types.Request{
 		URL:       "https://example.com",

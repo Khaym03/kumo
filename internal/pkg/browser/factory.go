@@ -71,7 +71,6 @@ func (bp *BrowserPool) Close() error {
 
 	for _, b := range bp.browsers {
 		if b != nil {
-			log.Printf("Closing browser at: %s", b.BrowserContextID)
 			b.MustClose()
 		}
 	}

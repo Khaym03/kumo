@@ -2,7 +2,6 @@ package ports
 
 import (
 	"context"
-	"io"
 
 	"github.com/Khaym03/kumo/internal/pkg/types"
 	"github.com/go-rod/rod"
@@ -17,7 +16,6 @@ type Collector interface {
 		page *rod.Page,
 		req *types.Request,
 		queue Enqueuer,
-		sink DataSink,
 	) error
 
 	Name() string
@@ -27,10 +25,6 @@ type Collector interface {
 type CollectorRegistry interface {
 	RegisterCollector(Collector)
 	Collectors() []Collector
-}
-
-type DataSink interface {
-	Store(id string, data io.Reader) error
 }
 
 type Enqueuer interface {

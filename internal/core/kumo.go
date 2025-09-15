@@ -3,11 +3,11 @@ package core
 import (
 	"context"
 
-	"log"
 	"sync"
 
 	"github.com/Khaym03/kumo/internal/pkg/types"
 	"github.com/Khaym03/kumo/internal/ports"
+	log "github.com/sirupsen/logrus"
 
 	_ "github.com/PuerkitoBio/goquery"
 	_ "golang.org/x/time/rate"
@@ -20,13 +20,13 @@ type KumoEngine struct {
 	collectors map[string]ports.Collector
 	ports.BrowserPool
 	ports.PagePool
-	dataSink ports.DataSink
+	reqStore ports.PersistenceStore
 }
 
 func NewKumoEngine(
 	bp ports.BrowserPool,
 	pp ports.PagePool,
-	ds ports.DataSink,
+	rs ports.PersistenceStore,
 	cs ...ports.Collector,
 ) *KumoEngine {
 	m := map[string]ports.Collector{}
@@ -41,13 +41,27 @@ func NewKumoEngine(
 		wg:          new(sync.WaitGroup),
 		BrowserPool: bp,
 		PagePool:    pp,
-		dataSink:    ds,
 		collectors:  m,
+		reqStore:    rs,
 	}
 }
 
 func (k *KumoEngine) Run() error {
 	log.Println("Starting Kumo engine...")
+
+	pending, err := k.reqStore.LoadPending()
+	if err != nil {
+		return err
+	}
+
+	if len(pending) == 0 {
+		log.Info("all URLs were processed")
+		return nil
+	}
+
+	log.Infof("Pending requests %d", len(pending))
+
+	k.Enqueue(pending...)
 
 	go k.worker(k.ctx, 1)
 
@@ -81,9 +95,17 @@ func (k *KumoEngine) worker(ctx context.Context, id int) {
 				continue
 			}
 
-			err = collector.ProcessPage(ctx, page, req, k, k.dataSink)
+			err = collector.ProcessPage(ctx, page, req, k)
 			if err != nil {
-				log.Println("Error processing page:", err)
+				log.Warn("Error processing page:", err)
+			} else {
+				// On successful completion, update the store.
+				if err := k.reqStore.SaveCompleted(req); err != nil {
+					log.Printf("Error saving completed request: %v", err)
+				}
+				if err := k.reqStore.RemoveFromPending(req); err != nil {
+					log.Printf("Error removing from pending: %v", err)
+				}
 			}
 
 			k.PagePool.Put(page)
@@ -100,10 +122,35 @@ func (k *KumoEngine) InitialReqs(r ...*types.Request) {
 }
 
 func (k *KumoEngine) Enqueue(r ...*types.Request) {
-	k.wg.Add(len(r))
-	k.queue.Enqueue(r...)
+	requestsToSave := []*types.Request{}
+	for _, req := range r {
+		isCompleted, err := k.reqStore.IsCompleted(req.URL)
+		if err != nil {
+			log.Printf("Error checking if request is completed: %v", err)
+			continue
+		}
+		if !isCompleted {
+			requestsToSave = append(requestsToSave, req)
+		}
+	}
+
+	if len(requestsToSave) == 0 {
+		return
+	}
+
+	if err := k.reqStore.SavePending(requestsToSave...); err != nil {
+		log.Printf("Error saving requests to store: %v", err)
+		return
+	}
+
+	k.wg.Add(len(requestsToSave))
+	k.queue.Enqueue(requestsToSave...)
 }
 
 func (k *KumoEngine) Shutdown() error {
+	err := k.reqStore.Close()
+	if err != nil {
+		log.Error(err)
+	}
 	return k.BrowserPool.Close()
 }

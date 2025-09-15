@@ -1,4 +1,6 @@
 .env
 example.png
 data/
+temp/
+test/
 !data/.gitkeep
