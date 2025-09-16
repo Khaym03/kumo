@@ -4,33 +4,38 @@ import (
 	"context"
 	"sync"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/Khaym03/kumo/internal/pkg/types"
 	"github.com/Khaym03/kumo/internal/ports"
-	log "github.com/sirupsen/logrus"
 
 	_ "github.com/PuerkitoBio/goquery"
 	_ "golang.org/x/time/rate"
 )
 
+// KumoEngine is the core orchestration engine for the web crawler.
 type KumoEngine struct {
 	ctx        context.Context
 	queue      chan *types.Request
-	wg         *sync.WaitGroup
+	requestWg  *sync.WaitGroup
 	mu         *sync.Mutex
 	collectors map[string]ports.Collector
 	ports.BrowserPool
 	ports.PagePool
 	fs           ports.FileStorage
 	reqStore     ports.PersistenceStore
+	reqFilters   []ports.RequestFilter
 	workersCount int
 }
 
+// NewKumoEngine creates and initializes a new Kumo engine.
 func NewKumoEngine(
 	ctx context.Context,
 	bp ports.BrowserPool,
 	pp ports.PagePool,
 	rs ports.PersistenceStore,
 	fs ports.FileStorage,
+	rf []ports.RequestFilter,
 	cs ...ports.Collector,
 ) *KumoEngine {
 	m := map[string]ports.Collector{}
@@ -41,73 +46,61 @@ func NewKumoEngine(
 	return &KumoEngine{
 		ctx:          ctx,
 		queue:        make(chan *types.Request, 500),
-		wg:           new(sync.WaitGroup),
+		requestWg:    new(sync.WaitGroup),
 		mu:           &sync.Mutex{},
 		BrowserPool:  bp,
 		PagePool:     pp,
 		collectors:   m,
 		reqStore:     rs,
 		fs:           fs,
+		reqFilters:   rf,
 		workersCount: pp.Size(),
 	}
 }
 
+// Run starts the crawling process, either resuming from a previous run or starting a new one.
 func (k *KumoEngine) Run(initialReqs ...*types.Request) error {
 	log.Println("Starting Kumo engine...")
 
-	// Phase 1: Check for pending requests and enqueue them.
 	pending, err := k.reqStore.LoadPending()
 	if err != nil {
 		return err
+	}
+
+	if len(pending) == 0 && len(initialReqs) == 0 {
+		log.Info("No initial requests and no pending requests. Exiting.")
+		return nil
 	}
 
 	if len(pending) > 0 {
 		log.Infof("Resuming from previous crawl with %d pending requests.", len(pending))
 		k.Enqueue(pending...)
 	} else {
-		// Only enqueue initial requests if there are no pending requests from a previous run.
-		if len(initialReqs) > 0 {
-			log.Info("Starting new crawl with initial requests.")
-			k.Enqueue(initialReqs...)
-		} else {
-			log.Info("No initial requests and no pending requests. Exiting.")
-			return nil
-		}
+		log.Info("Starting new crawl with initial requests.")
+		k.Enqueue(initialReqs...)
 	}
 
-	// Start workers first
 	workersWaitGrp := sync.WaitGroup{}
 	workersWaitGrp.Add(k.workersCount)
 	for i := 1; i <= k.workersCount; i++ {
 		go k.worker(k.ctx, &workersWaitGrp, i)
 	}
 
-	// Wait for all tasks to be completed.
-	k.wg.Wait()
+	k.requestWg.Wait()
 
-	// Signal workers to stop by closing the queue.
 	close(k.queue)
 
-	// Wait for all workers to shut down cleanly.
 	workersWaitGrp.Wait()
 
 	return nil
 }
 
+// Enqueue adds new requests to the processing queue after applying filters.
 func (k *KumoEngine) Enqueue(r ...*types.Request) {
 	k.mu.Lock()
-	requestsToSave := []*types.Request{}
-	for _, req := range r {
-		isCompleted, err := k.reqStore.IsCompleted(req.URL)
-		if err != nil {
-			log.Printf("Error checking if request is completed: %v", err)
-			continue
-		}
-		if !isCompleted {
-			requestsToSave = append(requestsToSave, req)
-		}
-	}
-	k.mu.Unlock()
+	defer k.mu.Unlock()
+
+	requestsToSave := k.filterRequests(r)
 
 	if len(requestsToSave) == 0 {
 		return
@@ -118,18 +111,43 @@ func (k *KumoEngine) Enqueue(r ...*types.Request) {
 		return
 	}
 
-	k.wg.Add(len(requestsToSave))
+	k.requestWg.Add(len(requestsToSave))
 	go k.dispatchRequests(requestsToSave)
 }
 
-// dispatchRequests sends requests to the queue in a separate goroutine.
-// This is used for bulk operations (like initial requests) to avoid blocking the main thread.
-func (k *KumoEngine) dispatchRequests(requests []*types.Request) {
-	for _, req := range requests {
-		k.queue <- req
+// Shutdown gracefully shuts down the engine and its dependencies.
+func (k *KumoEngine) Shutdown() error {
+	err := k.reqStore.Close()
+	if err != nil {
+		log.Error(err)
 	}
+	return k.BrowserPool.Close()
 }
 
+// filterRequests applies all registered filters to a slice of requests.
+func (k *KumoEngine) filterRequests(reqs []*types.Request) []*types.Request {
+	filteredReq := []*types.Request{}
+	for _, req := range reqs {
+		shouldFilter := false
+		for _, filter := range k.reqFilters {
+			filtered, err := filter.Filter(req)
+			if err != nil {
+				log.Warnf("Error applying filter: %v", err)
+				continue
+			}
+			if filtered {
+				shouldFilter = true
+				break
+			}
+		}
+		if !shouldFilter {
+			filteredReq = append(filteredReq, req)
+		}
+	}
+	return filteredReq
+}
+
+// worker fetches requests from the queue and processes them.
 func (k *KumoEngine) worker(ctx context.Context, wg *sync.WaitGroup, id int) {
 	defer wg.Done()
 
@@ -145,14 +163,14 @@ func (k *KumoEngine) worker(ctx context.Context, wg *sync.WaitGroup, id int) {
 			collector, ok := k.collectors[req.Collector]
 			if !ok {
 				log.Printf("No collector found for: %s", req.Collector)
-				k.wg.Done()
+				k.requestWg.Done()
 				continue
 			}
 
 			page, err := k.PagePool.Get()
 			if err != nil {
 				log.Println("Error getting page from pool:", err)
-				k.wg.Done()
+				k.requestWg.Done()
 				continue
 			}
 
@@ -169,7 +187,7 @@ func (k *KumoEngine) worker(ctx context.Context, wg *sync.WaitGroup, id int) {
 			}
 
 			k.PagePool.Put(page)
-			k.wg.Done()
+			k.requestWg.Done()
 		case <-ctx.Done():
 			log.Printf("Worker %d shutting down gracefully.", id)
 			return
@@ -177,10 +195,9 @@ func (k *KumoEngine) worker(ctx context.Context, wg *sync.WaitGroup, id int) {
 	}
 }
 
-func (k *KumoEngine) Shutdown() error {
-	err := k.reqStore.Close()
-	if err != nil {
-		log.Error(err)
+// dispatchRequests sends requests to the queue in a separate goroutine.
+func (k *KumoEngine) dispatchRequests(requests []*types.Request) {
+	for _, req := range requests {
+		k.queue <- req
 	}
-	return k.BrowserPool.Close()
 }

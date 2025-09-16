@@ -23,10 +23,14 @@ type PersistenceStore interface {
 	LoadPending() ([]*types.Request, error)
 	SaveCompleted(req *types.Request) error
 	RemoveFromPending(req *types.Request) error
-	// url or any other identifier
-	IsCompleted(url string) (bool, error)
+	CompletionChecker
 
 	Close() error
+}
+
+type CompletionChecker interface {
+	// url or any other identifier
+	IsCompleted(url string) (bool, error)
 }
 
 type FileStorage interface {

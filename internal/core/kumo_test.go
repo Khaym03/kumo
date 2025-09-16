@@ -13,6 +13,7 @@ import (
 	"github.com/Khaym03/kumo/internal/core"
 	mockports "github.com/Khaym03/kumo/internal/mock/ports"
 	"github.com/Khaym03/kumo/internal/pkg/types"
+	"github.com/Khaym03/kumo/internal/ports"
 )
 
 // KumoEngineTestSuite defines the suite for KumoEngine tests.
@@ -26,6 +27,7 @@ type KumoEngineTestSuite struct {
 	mockBrowserPool *mockports.MockBrowserPool
 	mockCollector   *mockports.MockCollector
 	mockFileStorage *mockports.MockFileStorage
+	mockFilter      *mockports.MockRequestFilter
 }
 
 // SetupTest is called before each test method in the suite.
@@ -37,10 +39,14 @@ func (s *KumoEngineTestSuite) SetupTest() {
 	s.mockBrowserPool = new(mockports.MockBrowserPool)
 	s.mockCollector = new(mockports.MockCollector)
 	s.mockFileStorage = new(mockports.MockFileStorage)
+	s.mockFilter = new(mockports.MockRequestFilter)
 
 	s.mockPagePool.On("Size").Return(1)
 	s.mockCollector.On("String").Return("test-collector")
-	s.mockReqStore.On("IsCompleted", mock.Anything).Return(false, nil)
+
+	// The IsCompleted check is now handled by the filter.
+	// We no longer set up this expectation on the mockReqStore.
+
 	s.mockReqStore.On("SavePending", mock.Anything).Return(nil)
 	s.mockReqStore.On("SaveCompleted", mock.Anything).Return(nil)
 	s.mockReqStore.On("RemoveFromPending", mock.Anything).Return(nil)
@@ -51,6 +57,7 @@ func (s *KumoEngineTestSuite) SetupTest() {
 		s.mockPagePool,
 		s.mockReqStore,
 		s.mockFileStorage,
+		[]ports.RequestFilter{s.mockFilter},
 		s.mockCollector,
 	)
 }
@@ -70,6 +77,9 @@ func (s *KumoEngineTestSuite) TestSuccessfulFlow() {
 
 	s.mockReqStore.On("LoadPending").Return([]*types.Request{}, nil).Once()
 
+	// The mock filter will return false, meaning don't filter (don't skip)
+	s.mockFilter.On("Filter", mock.Anything).Return(false, nil).Twice()
+
 	s.mockPagePool.On("Get").Return(new(rod.Page), nil).Twice()
 	s.mockPagePool.On("Put", mock.Anything).Return(nil).Twice()
 
@@ -83,6 +93,7 @@ func (s *KumoEngineTestSuite) TestSuccessfulFlow() {
 	s.mockReqStore.AssertExpectations(s.T())
 	s.mockPagePool.AssertExpectations(s.T())
 	s.mockCollector.AssertExpectations(s.T())
+	s.mockFilter.AssertExpectations(s.T())
 }
 
 // TestResumesFromPending is a test method for the resume-from-pending scenario.
@@ -93,6 +104,9 @@ func (s *KumoEngineTestSuite) TestResumesFromPending() {
 	}
 
 	s.mockReqStore.On("LoadPending").Return(pendingReqs, nil).Once()
+
+	// The mock filter will return false, meaning don't filter (don't skip)
+	s.mockFilter.On("Filter", mock.Anything).Return(false, nil).Once()
 
 	s.mockPagePool.On("Get").Return(new(rod.Page), nil).Once()
 	s.mockPagePool.On("Put", mock.Anything).Return(nil).Once()
@@ -107,6 +121,7 @@ func (s *KumoEngineTestSuite) TestResumesFromPending() {
 	s.mockReqStore.AssertExpectations(s.T())
 	s.mockPagePool.AssertExpectations(s.T())
 	s.mockCollector.AssertExpectations(s.T())
+	s.mockFilter.AssertExpectations(s.T())
 }
 
 // TestKumoEngine is the entry point for running the test suite.

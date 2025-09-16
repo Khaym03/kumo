@@ -7,6 +7,7 @@ import (
 	"syscall"
 
 	"github.com/Khaym03/kumo/internal/adapters/config"
+	"github.com/Khaym03/kumo/internal/adapters/filter"
 	"github.com/Khaym03/kumo/internal/adapters/pagepool"
 	"github.com/Khaym03/kumo/internal/adapters/storage"
 	"github.com/Khaym03/kumo/internal/core"
@@ -67,6 +68,11 @@ func main() {
 		// &types.Request{URL: "https://example.com", Collector: "collector-name"},
 	}
 
+	// Define the logic to skip types.Request
+	requestFilters := []ports.RequestFilter{
+		filter.NewIsCompletedFilter(db),
+	}
+
 	// --- START THE ENGINE ---
 	kumo := core.NewKumoEngine(
 		ctx,
@@ -74,6 +80,7 @@ func main() {
 		pp,
 		db,
 		db,
+		requestFilters,
 		collectors...,
 	)
 
