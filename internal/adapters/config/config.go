@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 
+	"github.com/Khaym03/kumo/internal/pkg/utils"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
@@ -35,4 +36,8 @@ func LoadKumoConfig() *Config {
 	}
 
 	return &cfg
+}
+
+func (c *Config) String() string {
+	return utils.ToJSONString(c)
 }

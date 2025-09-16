@@ -1,7 +1,11 @@
 package main
 
 import (
-	adapters "github.com/Khaym03/kumo/internal/adapters/collector"
+	"context"
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/Khaym03/kumo/internal/adapters/config"
 	"github.com/Khaym03/kumo/internal/adapters/pagepool"
 	"github.com/Khaym03/kumo/internal/adapters/storage"
@@ -9,21 +13,26 @@ import (
 	"github.com/Khaym03/kumo/internal/pkg/browser"
 	"github.com/Khaym03/kumo/internal/pkg/proxy"
 	"github.com/Khaym03/kumo/internal/pkg/types"
+	"github.com/Khaym03/kumo/internal/ports"
+	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
 )
 
 func main() {
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	ctx, cancel := context.WithCancel(context.Background())
+
 	log.Info("loading config...")
 	conf := config.LoadKumoConfig()
 
-	log.Println(*conf)
+	log.Println(conf.String())
 	pm := proxy.NewConcurrentProxyManager([]proxy.Proxy{})
 
 	creators := browser.CreateCreatorsFromConfig(conf.Browsers, pm)
 	browserPool := browser.NewPool(creators...)
 	pp := pagepool.NewPagePool(browserPool, conf.NumOfPagesPerBrowser)
-
-	mockCollector := adapters.NewMockCollector()
 
 	dbConn, err := storage.NewBadgerDB(conf.StorageDir, conf.AllowBadgerLogger)
 	if err != nil {
@@ -32,14 +41,49 @@ func main() {
 
 	db := storage.NewBadgerDBStore(dbConn)
 
-	kumo := core.NewKumoEngine(browserPool, pp, db, db, mockCollector)
-
-	initialRequest := &types.Request{
-		URL:       "https://example.com",
-		Collector: mockCollector.String(),
+	collectors := []ports.Collector{
+		// concrete collectors
 	}
 
-	kumo.Run(initialRequest)
-	// kumo.Shutdown()
+	kumo := core.NewKumoEngine(
+		ctx,
+		browserPool,
+		pp,
+		db,
+		db,
+		collectors...,
+	)
+	defer func() {
+		err = kumo.Shutdown()
+		if err != nil {
+			log.Warn(err)
+		}
+	}()
 
+	go func() {
+		// Must pass an initial ...*types.Request
+		kumo.Run(&types.Request{})
+		cancel()
+	}()
+
+	// The select statement waits for either an OS signal or a completion signal.
+	select {
+	case sig := <-sigChan:
+		log.Infof("Interruption signal received (%v).", sig)
+		cancel()
+	case <-ctx.Done():
+		log.Info("The scraping process completed its normal execution.")
+	}
+
+	log.Info("Application shutting down gracefully.")
+
+}
+
+func init() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.SetFormatter(&log.TextFormatter{ForceColors: true})
 }

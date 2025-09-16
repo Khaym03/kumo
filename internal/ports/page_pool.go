@@ -32,6 +32,8 @@ type PersistenceStore interface {
 type FileStorage interface {
 	SaveHTML(key string, data []byte) error
 	SavePDF(key string, data []byte) error
+	SaveJSON(id string, data []byte) error
 	GetHTML(key string) ([]byte, error)
 	GetPDF(key string) ([]byte, error)
+	GetJSON(key string) ([]byte, error)
 }

@@ -26,6 +26,7 @@ type KumoEngine struct {
 }
 
 func NewKumoEngine(
+	ctx context.Context,
 	bp ports.BrowserPool,
 	pp ports.PagePool,
 	rs ports.PersistenceStore,
@@ -38,8 +39,8 @@ func NewKumoEngine(
 	}
 
 	return &KumoEngine{
-		ctx:          context.Background(),
-		queue:        make(chan *types.Request, 100),
+		ctx:          ctx,
+		queue:        make(chan *types.Request, 500),
 		wg:           new(sync.WaitGroup),
 		mu:           &sync.Mutex{},
 		BrowserPool:  bp,
@@ -62,17 +63,17 @@ func (k *KumoEngine) Run(initialReqs ...*types.Request) error {
 
 	if len(pending) > 0 {
 		log.Infof("Resuming from previous crawl with %d pending requests.", len(pending))
-		k.Enqueue(pending...)
 	} else {
 		// Only enqueue initial requests if there are no pending requests from a previous run.
 		if len(initialReqs) > 0 {
 			log.Info("Starting new crawl with initial requests.")
-			k.Enqueue(initialReqs...)
 		} else {
 			log.Info("No initial requests and no pending requests. Exiting.")
 			return nil
 		}
 	}
+
+	k.Enqueue(pending...)
 
 	// Start workers first
 	workersWaitGrp := sync.WaitGroup{}
@@ -90,15 +91,11 @@ func (k *KumoEngine) Run(initialReqs ...*types.Request) error {
 	// Wait for all workers to shut down cleanly.
 	workersWaitGrp.Wait()
 
-	log.Info("All URLs were processed, and workers have shut down.")
-
-	return k.Shutdown()
+	return nil
 }
 
 func (k *KumoEngine) Enqueue(r ...*types.Request) {
 	k.mu.Lock()
-	defer k.mu.Unlock()
-
 	requestsToSave := []*types.Request{}
 	for _, req := range r {
 		isCompleted, err := k.reqStore.IsCompleted(req.URL)
@@ -110,6 +107,7 @@ func (k *KumoEngine) Enqueue(r ...*types.Request) {
 			requestsToSave = append(requestsToSave, req)
 		}
 	}
+	k.mu.Unlock()
 
 	if len(requestsToSave) == 0 {
 		return
@@ -121,7 +119,13 @@ func (k *KumoEngine) Enqueue(r ...*types.Request) {
 	}
 
 	k.wg.Add(len(requestsToSave))
-	for _, req := range requestsToSave {
+	go k.dispatchRequests(requestsToSave)
+}
+
+// dispatchRequests sends requests to the queue in a separate goroutine.
+// This is used for bulk operations (like initial requests) to avoid blocking the main thread.
+func (k *KumoEngine) dispatchRequests(requests []*types.Request) {
+	for _, req := range requests {
 		k.queue <- req
 	}
 }

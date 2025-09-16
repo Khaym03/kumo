@@ -7,6 +7,7 @@ import (
 var (
 	htmlPrefix = []byte("html:")
 	pdfPrefix  = []byte("pdf:")
+	jsonPrefix = []byte("json:")
 )
 
 func (b *BadgerDBStore) SaveHTML(url string, htmlContent []byte) error {
@@ -19,6 +20,11 @@ func (b *BadgerDBStore) SavePDF(id string, data []byte) error {
 	return b.save(key, data)
 }
 
+func (b *BadgerDBStore) SaveJSON(id string, data []byte) error {
+	key := append(jsonPrefix, []byte(id)...)
+	return b.save(key, data)
+}
+
 func (b *BadgerDBStore) GetHTML(k string) ([]byte, error) {
 	key := append(htmlPrefix, []byte(k)...)
 	return b.get(key)
@@ -26,6 +32,11 @@ func (b *BadgerDBStore) GetHTML(k string) ([]byte, error) {
 
 func (b *BadgerDBStore) GetPDF(k string) ([]byte, error) {
 	key := append(pdfPrefix, []byte(k)...)
+	return b.get(key)
+}
+
+func (b *BadgerDBStore) GetJSON(k string) ([]byte, error) {
+	key := append(jsonPrefix, []byte(k)...)
 	return b.get(key)
 }
 
