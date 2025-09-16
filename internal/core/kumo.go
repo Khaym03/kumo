@@ -63,17 +63,17 @@ func (k *KumoEngine) Run(initialReqs ...*types.Request) error {
 
 	if len(pending) > 0 {
 		log.Infof("Resuming from previous crawl with %d pending requests.", len(pending))
+		k.Enqueue(pending...)
 	} else {
 		// Only enqueue initial requests if there are no pending requests from a previous run.
 		if len(initialReqs) > 0 {
 			log.Info("Starting new crawl with initial requests.")
+			k.Enqueue(initialReqs...)
 		} else {
 			log.Info("No initial requests and no pending requests. Exiting.")
 			return nil
 		}
 	}
-
-	k.Enqueue(pending...)
 
 	// Start workers first
 	workersWaitGrp := sync.WaitGroup{}

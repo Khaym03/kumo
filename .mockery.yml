@@ -1,5 +1,5 @@
 all: false
-dir: mock
+dir: mocks/
 filename: '{{.InterfaceName | snakecase}}_mock.go'
 force-file-write: false
 formatter: goimports
@@ -10,7 +10,7 @@ recursive: false
 template: testify
 packages:
   packages:
-  github.com/Khaym03/kumo/ports:
+  github.com/Khaym03/kumo/internal/ports:
     config:
       all: true
-      dir: mock/ports
+      dir: internal/mock/ports
