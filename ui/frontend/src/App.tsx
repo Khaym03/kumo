@@ -1,25 +1,21 @@
-// import {useState} from 'react';
-// import logo from './assets/images/logo-universal.png';
+// src/App.tsx
+
+import React from 'react';
 import TitleBar from './components/tittle_bar';
-// import {Greet} from "../wailsjs/go/main/App";
-// import { Button } from './components/ui/button';
+import DragAndDropCanvas from './components/dnd';
 
+const App: React.FC = () => {
+  return (
+    <div className="flex flex-col h-screen bg-neutral-900 text-white">
+      {/* The custom title bar goes at the top */}
+      <TitleBar />
+      
+      {/* The main content area contains your new component */}
+      <main className="flex-1 overflow-auto p-4">
+        <DragAndDropCanvas />
+      </main>
+    </div>
+  );
+};
 
-function App() {
-    // const [resultText, setResultText] = useState("Please enter your name below 👇");
-    // const [name, setName] = useState('');
-    // const updateName = (e: any) => setName(e.target.value);
-    // const updateResultText = (result: string) => setResultText(result);
-
-    // function greet() {
-    //     Greet(name).then(updateResultText);
-    // }
-
-    return (
-       <div className='dark @container/main flex flex-1 flex-col gap-2 h-screen h-min-full'>
-        <TitleBar/>
-       </div>
-    )
-}
-
-export default App
+export default App;
