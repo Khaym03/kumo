@@ -4,3 +4,8 @@ data/
 temp/
 test/
 !data/.gitkeep
+
+#ui
+ui/build/bin
+ui/frontend/node_modules
+ui/frontend/dist
