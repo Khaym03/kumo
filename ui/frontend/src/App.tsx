@@ -2,7 +2,7 @@
 
 import React from 'react';
 import TitleBar from './components/tittle_bar';
-import Infrastructure from './components/Infrastructure';
+import Infrastructure from './infrastruture/Infrastructure';
 
 const App: React.FC = () => {
   return (

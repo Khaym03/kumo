@@ -8,10 +8,10 @@ import {
   CommandList
 } from '@/components/ui/command'
 
-import { NodeComponents, type NodeComponentTypes } from '@/components/node/types'
 import React from 'react'
 import { useReactFlow} from '@xyflow/react'
-import { nodeFactory } from '@/lib/node_factory'
+import { nodeFactory } from '@/infrastruture/node_factory'
+import { SupportedNodeComponentTypes, type NodeComponentType } from './constants'
 
 export default function Cmd() {
   const [open, setOpen] = React.useState(false)
@@ -28,7 +28,7 @@ export default function Cmd() {
     return () => document.removeEventListener('keydown', down)
   }, [])
 
-  const handleAddNode = (component: NodeComponentTypes) => {
+  const handleAddNode = (component: NodeComponentType) => {
     setNodes(nodes => [...nodes, nodeFactory(component)])
     setOpen(false)
   }
@@ -40,7 +40,7 @@ export default function Cmd() {
         <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>
           <CommandGroup heading="Components">
-            {NodeComponents.map((component, index) => (
+            {SupportedNodeComponentTypes.map((component, index) => (
               <CommandItem key={index}  onSelect={() => handleAddNode(component)}>
                 {component}
               </CommandItem>

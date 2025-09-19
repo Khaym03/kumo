@@ -22,12 +22,12 @@ import {
   SheetTitle,
   SheetTrigger
 } from '@/components/ui/sheet'
-import { Button } from '../ui/button'
+import { Button } from '../../components/ui/button'
 import { Label } from '@/components/ui/label'
-import { Input } from '../ui/input'
-import { type BrowserConfig } from '@/lib/node_factory'
-import { RadioGroup, RadioGroupItem } from '../ui/radio-group'
-import { Switch } from '../ui/switch'
+import { Input } from '../../components/ui/input'
+import { type BrowserConfig } from '@/infrastruture/node_factory'
+import { RadioGroup, RadioGroupItem } from '../../components/ui/radio-group'
+import { Switch } from '../../components/ui/switch'
 
 export const BrowserNode = memo((props: NodeProps) => {
   return (

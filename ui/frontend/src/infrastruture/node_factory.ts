@@ -1,6 +1,6 @@
-import { type NodeComponentTypes } from '@/components/node/types'
 import { Position, type Node } from '@xyflow/react'
 import { nanoid } from 'nanoid'
+import type { NodeComponentType } from './constants'
 
 export interface BrowserConfig {
   type?: 'local' | 'remote'
@@ -13,7 +13,7 @@ const defaultBrowserConfig: BrowserConfig = {
   withProxy: false
 }
 
-export function nodeFactory(component: NodeComponentTypes) {
+export function nodeFactory(component: NodeComponentType) {
   let data = {}
   switch (component) {
     case 'browser':
@@ -27,7 +27,7 @@ export function nodeFactory(component: NodeComponentTypes) {
       break
   }
 
-  const randPos = Math.random() * 300
+  const randPos = Math.random() * 200
   const newNode: Node = {
     id: nanoid(),
     data,

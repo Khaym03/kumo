@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback} from 'react'
 import {
   ReactFlow,
   Background,
@@ -6,37 +6,15 @@ import {
   useNodesState,
   useEdgesState,
   addEdge,
-  Position,
-  type Node,
-  type Edge,
-  type XYPosition
 } from '@xyflow/react'
 
 import '@xyflow/react/dist/style.css'
-import { getLayoutedElements } from '@/lib/utils' // Update the path if necessary
+import { getLayoutedElements } from '@/infrastruture/sort'
 import { DevTools } from './devtools'
-import { nodeTypes, edgeTypes } from './node/types'
-import { nanoid } from 'nanoid'
-import { ContextMenu } from '@radix-ui/react-context-menu'
-import { ContextMenuContent, ContextMenuTrigger } from './ui/context-menu'
 import Cmd from './cmd'
+import { EdgeTypes, initialEdges, initialNodes, NodeTypes } from './constants'
 
-// const nodeDefaults = {
-//   sourcePosition: Position.Bottom,
-//   targetPosition: Position.Top,
-// };
 
-const initialNodes: Node[] = [
-  {
-    id: 'root',
-    data: { label: 'Root' },
-    position: { x: 0, y: 0 },
-    sourcePosition: Position.Bottom,
-    type: 'root'
-  }
-]
-
-const initialEdges: Edge[] = []
 
 const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
   initialNodes,
@@ -57,8 +35,8 @@ const Flow = () => {
     <ReactFlow
       nodes={nodes}
       edges={edges}
-      nodeTypes={nodeTypes}
-      edgeTypes={edgeTypes}
+      nodeTypes={NodeTypes}
+      edgeTypes={EdgeTypes}
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
       onConnect={onConnect}
