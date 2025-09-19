@@ -2,6 +2,7 @@ import { memo } from 'react'
 import { BaseNode, BaseNodeContent } from '@/components/base-node'
 import { Network } from 'lucide-react'
 import { Handle, Position } from '@xyflow/react'
+import CustomHandle from '../handle/custom_handle'
 
 const numberOfHandles = 4
 
@@ -18,12 +19,12 @@ export const RootNode = memo(() => {
       </BaseNodeContent>
 
       {leftPositions.map((left, index) => (
-        <Handle
+        <CustomHandle
           key={`bottom-${index}`}
           type="source"
           position={Position.Bottom}
           id={`bottom-${index}`}
-          style={{ left, width: 10, height: 10 }} // customize handle style here
+          style={{ left}}
         />
       ))}
     </BaseNode>

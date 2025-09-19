@@ -22,31 +22,31 @@ import {
   SheetTitle,
   SheetTrigger
 } from '@/components/ui/sheet'
-import { Button } from '../../components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Input } from '../../components/ui/input'
 import { type BrowserConfig } from '@/infrastruture/node_factory'
 import { RadioGroup, RadioGroupItem } from '../../components/ui/radio-group'
 import { Switch } from '../../components/ui/switch'
+import CustomHandle from '../handle/custom_handle'
 
 export const BrowserNode = memo((props: NodeProps) => {
   return (
     <BrowserNodeSheet node={props}>
       <BaseNode className="">
-        <BaseNodeHeader className="border-b">
+        <BaseNodeHeader className="">
           <LaptopMinimal className="size-4" />
           <BaseNodeHeaderTitle>Browser</BaseNodeHeaderTitle>
         </BaseNodeHeader>
 
         {/* Target handle to receive edges */}
-        <Handle
+        <CustomHandle
           type="target"
           position={Position.Top}
           id={`${props.id}-target`}
         />
 
         {/* Source handle to send edges */}
-        <Handle
+        <CustomHandle
           type="source"
           position={Position.Bottom}
           id={`${props.id}-source`}
@@ -149,7 +149,7 @@ export function BrowserNodeSheet({ children, node }: BrowserNodeProps) {
                 className="mb-1 block text-sm font-medium"
                 htmlFor={`address-${node.id}`}
               >
-                Proxy Address
+                Remote Address
               </Label>
               <Input
                 id={`address-${node.id}`}

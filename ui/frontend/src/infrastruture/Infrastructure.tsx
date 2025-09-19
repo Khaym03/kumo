@@ -13,6 +13,7 @@ import { getLayoutedElements } from '@/infrastruture/sort'
 import { DevTools } from './devtools'
 import Cmd from './cmd'
 import { EdgeTypes, initialEdges, initialNodes, NodeTypes } from './constants'
+import { useAppContext } from '@/context/app_ctx'
 
 
 
@@ -24,6 +25,7 @@ const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
 const Flow = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(layoutedNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(layoutedEdges)
+  const {isDarkMode} = useAppContext()
 
   const onConnect = useCallback(
     (params: any) => setEdges(els => addEdge(params, els)),
@@ -40,7 +42,7 @@ const Flow = () => {
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
       onConnect={onConnect}
-      colorMode="dark"
+      colorMode={isDarkMode ? 'dark' : 'light'}
       fitView
     >
       <Background />
