@@ -1,18 +1,7 @@
-import { memo, use, useState } from 'react'
-import {
-  BaseNode,
-  BaseNodeHeader,
-  BaseNodeHeaderTitle
-} from '@/components/base-node'
+import { memo, useEffect } from 'react'
+import { BaseNode, BaseNodeContent } from '@/components/base-node'
 import { LaptopMinimal } from 'lucide-react'
-import {
-  Handle,
-  Position,
-  useReactFlow,
-  type Node,
-  type NodeProps
-} from '@xyflow/react'
-import { nanoid } from 'nanoid'
+import { Position, useReactFlow, type NodeProps } from '@xyflow/react'
 
 import {
   Sheet,
@@ -22,30 +11,44 @@ import {
   SheetTitle,
   SheetTrigger
 } from '@/components/ui/sheet'
-import { Label } from '@/components/ui/label'
 import { Input } from '../../components/ui/input'
-import { type BrowserConfig } from '@/infrastruture/node_factory'
 import { RadioGroup, RadioGroupItem } from '../../components/ui/radio-group'
 import { Switch } from '../../components/ui/switch'
 import CustomHandle from '../handle/custom_handle'
 
+// Form and Zod imports
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from '@/components/ui/form'
+
+import { type BrowserConfig } from '@/infrastruture/node_factory'
+
+type BrowserFormValues = z.infer<typeof browserFormSchema>
+
 export const BrowserNode = memo((props: NodeProps) => {
   return (
     <BrowserNodeSheet node={props}>
-      <BaseNode className="">
-        <BaseNodeHeader className="">
-          <LaptopMinimal className="size-4" />
-          <BaseNodeHeaderTitle>Browser</BaseNodeHeaderTitle>
-        </BaseNodeHeader>
-
-        {/* Target handle to receive edges */}
+      <BaseNode>
+        <BaseNodeContent>
+          <div className="flex gap-4 items-center">
+            <LaptopMinimal className="size-4" />
+            <div>Browser</div>
+          </div>
+        </BaseNodeContent>
         <CustomHandle
           type="target"
           position={Position.Top}
           id={`${props.id}-target`}
         />
-
-        {/* Source handle to send edges */}
         <CustomHandle
           type="source"
           position={Position.Bottom}
@@ -63,34 +66,39 @@ interface BrowserNodeProps {
   node: NodeProps
 }
 
+const browserFormSchema = z.object({
+  type: z.enum(['local', 'remote'], {
+    message: 'Please select a browser type.'
+  }),
+  withProxy: z.boolean(),
+  address: z.string()
+})
+
 export function BrowserNodeSheet({ children, node }: BrowserNodeProps) {
-  const browserConf = node.data as BrowserConfig
-  const [conf, setConf] = useState<BrowserConfig>(browserConf)
   const { setNodes } = useReactFlow()
 
-  const handleTypeChange = (value: 'local' | 'remote') => {
-    const newConf = { ...conf, type: value }
-    setConf(newConf)
-    setNodes(nds =>
-      nds.map(n => (n.id === node.id ? { ...n, data: newConf } : n))
-    )
-  }
+  const initialData = node.data as unknown as BrowserConfig
 
-  const handleWithProxyChange = (value: boolean) => {
-    const newConf = { ...conf, withProxy: value }
-    setConf(newConf)
-    setNodes(nds =>
-      nds.map(n => (n.id === node.id ? { ...n, data: newConf } : n))
-    )
-  }
 
-  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newConf = { ...conf, address: e.target.value }
-    setConf(newConf)
-    setNodes(nds =>
-      nds.map(n => (n.id === node.id ? { ...n, data: newConf } : n))
-    )
-  }
+  const form = useForm<BrowserFormValues>({
+    resolver: zodResolver(browserFormSchema),
+    defaultValues: {
+      type: initialData.type,
+      withProxy: initialData.withProxy,
+      address: initialData.address
+    }
+  })
+
+ 
+  useEffect(() => {
+    const subscription = form.watch(values => {
+      setNodes(nds =>
+        nds.map(n => (n.id === node.id ? { ...n, data: values } : n))
+      )
+    })
+
+    return () => subscription.unsubscribe()
+  }, [form, node.id, setNodes])
 
   return (
     <Sheet>
@@ -100,67 +108,85 @@ export function BrowserNodeSheet({ children, node }: BrowserNodeProps) {
           <SheetTitle className="text-lg font-semibold">
             Node ID: #{node.id}
           </SheetTitle>
-          <SheetDescription className="text-sm text-secondary">
+          <SheetDescription className="text-sm text-foreground">
             Update the browser node configuration below.
           </SheetDescription>
         </SheetHeader>
 
-        <form className="space-y-6 px-4 py-2">
-          {/* Type Selector */}
-          <div>
-            <Label
-              className="mb-1 block text-sm font-medium"
-              htmlFor={`type-${node.id}`}
-            >
-              Type
-            </Label>
-            <RadioGroup
+        <Form {...form}>
+          <form className="space-y-6 px-4 py-2">
+            {/* Type Selector (Radio Group) */}
+            <FormField
+              control={form.control}
               name="type"
-              value={conf.type}
-              onValueChange={handleTypeChange}
-              className="flex space-x-6"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="local" id={`local-${node.id}`} />
-                <Label htmlFor={`local-${node.id}`}>Local</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="remote" id={`remote-${node.id}`} />
-                <Label htmlFor={`remote-${node.id}`}>Remote</Label>
-              </div>
-            </RadioGroup>
-          </div>
-
-          {/* Proxy Switch */}
-          <div className="flex items-center space-x-4">
-            <Switch
-              checked={conf.withProxy}
-              onCheckedChange={handleWithProxyChange}
-              id={`proxy-${node.id}`}
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>Type</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex space-x-6"
+                    >
+                      <FormItem className="flex items-center space-x-2">
+                        <FormControl>
+                          <RadioGroupItem value="local" />
+                        </FormControl>
+                        <FormLabel>Local</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-2">
+                        <FormControl>
+                          <RadioGroupItem value="remote" />
+                        </FormControl>
+                        <FormLabel>Remote</FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-            <Label htmlFor={`proxy-${node.id}`} className="text-sm font-medium">
-              Use Proxy
-            </Label>
-          </div>
 
-          {conf.type === 'remote' && (
-            <div>
-              <Label
-                className="mb-1 block text-sm font-medium"
-                htmlFor={`address-${node.id}`}
-              >
-                Remote Address
-              </Label>
-              <Input
-                id={`address-${node.id}`}
-                placeholder="Enter proxy address"
-                value={conf.address}
-                onChange={handleAddressChange}
-                className="w-full"
+            {/* Proxy Switch */}
+            <FormField
+              control={form.control}
+              name="withProxy"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Use Proxy</FormLabel>
+                    <FormDescription>
+                      Enable this to use a proxy for the browser.
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            {/* Remote Address Input */}
+            {form.watch('type') === 'remote' && (
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Remote Address</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter remote address" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-          )}
-        </form>
+            )}
+          </form>
+        </Form>
       </SheetContent>
     </Sheet>
   )

@@ -3,14 +3,15 @@ import { nanoid } from 'nanoid'
 import type { NodeComponentType } from './constants'
 
 export interface BrowserConfig {
-  type?: 'local' | 'remote'
-  withProxy?: boolean
-  address?: string
+  type: 'local' | 'remote'
+  withProxy: boolean
+  address: string
 }
 
 const defaultBrowserConfig: BrowserConfig = {
   type: 'local',
-  withProxy: false
+  withProxy: false,
+  address:""
 }
 
 export function nodeFactory(component: NodeComponentType) {
