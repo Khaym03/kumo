@@ -5,10 +5,11 @@ import {
   BaseNodeHeaderTitle
 } from '@/components/base-node'
 import { AppWindow } from 'lucide-react'
-import { Handle, Position } from '@xyflow/react'
+import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { nanoid } from 'nanoid'
+import CustomHandle from '../handle/custom_handle'
 
-export const PageNode = memo(() => {
+export const PageNode = memo((props: NodeProps) => {
   return (
     <BaseNode className="">
       <BaseNodeHeader className="border-b">
@@ -17,17 +18,17 @@ export const PageNode = memo(() => {
       </BaseNodeHeader>
 
       {/* Target handle to receive edges */}
-      <Handle
+      <CustomHandle
         type="target"
         position={Position.Top}
-        id={nanoid()}
+         id={`${props.id}-target`}
       />
 
       {/* Source handle to send edges */}
-      <Handle
+      <CustomHandle
         type="source"
         position={Position.Bottom}
-       id={nanoid()}
+      id={`${props.id}-source`}
       />
     </BaseNode>
   )

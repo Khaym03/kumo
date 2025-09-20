@@ -30,7 +30,7 @@ export function nodeFactory(component: NodeComponentType) {
 
   const randPos = Math.random() * 200
   const newNode: Node = {
-    id: nanoid(),
+    id: `${component}-${nanoid()}`,
     data,
     position: { x: randPos, y: randPos },
     sourcePosition: Position.Bottom,

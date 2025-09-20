@@ -1,4 +1,4 @@
-import { useCallback} from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   ReactFlow,
   Background,
@@ -6,6 +6,7 @@ import {
   useNodesState,
   useEdgesState,
   addEdge,
+  type Node
 } from '@xyflow/react'
 
 import '@xyflow/react/dist/style.css'
@@ -14,8 +15,8 @@ import { DevTools } from './devtools'
 import Cmd from './cmd'
 import { EdgeTypes, initialEdges, initialNodes, NodeTypes } from './constants'
 import { useAppContext } from '@/context/app_ctx'
-
-
+import type { BrowserConfig } from './node_factory'
+import { useBuildConfig } from './useBuildConfig'
 
 const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
   initialNodes,
@@ -25,13 +26,20 @@ const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
 const Flow = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(layoutedNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(layoutedEdges)
-  const {isDarkMode} = useAppContext()
+  // const [config, setConfig] = useState<{ root?: string; browsers: any[] }>({ browsers: [] });
+
+  const { isDarkMode } = useAppContext()
 
   const onConnect = useCallback(
     (params: any) => setEdges(els => addEdge(params, els)),
     [setEdges]
   )
 
+  // const {config} = useBuildConfig(nodes, edges)
+
+  // useEffect(() => {
+  //   console.log('Built scrapper config:', config)
+  // }, [config])
 
   return (
     <ReactFlow
