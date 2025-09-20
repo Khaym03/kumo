@@ -54,7 +54,7 @@ export const AnimatedThemeToggler = ({ className }: props) => {
       variant="ghost"
       size="icon"
       onClick={changeTheme}
-      className={(cn(className), 'size-8 rounded-none')}
+      className={(cn(className), 'size-8 rounded-none h-full')}
     >
       {isDarkMode ? <SunDim /> : <Moon />}
     </Button>
