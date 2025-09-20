@@ -6,6 +6,6 @@ test/
 !data/.gitkeep
 
 #ui
-ui/build/bin
-ui/frontend/node_modules
-ui/frontend/dist
+build/bin
+frontend/node_modules
+frontend/dist

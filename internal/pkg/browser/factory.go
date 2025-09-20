@@ -107,7 +107,7 @@ func CreateCreatorsFromConfig(configs []config.BrowserConfig, pm proxy.ProxyMana
 		case "local":
 			creator = NewLocalBrowserCreator(opts...)
 		case "remote":
-			opts = append(opts, WithRemoteHost(bc.Host))
+			opts = append(opts, WithRemoteHost(bc.Address))
 			creator = NewRemoteBrowserCreator(opts...)
 		default:
 			log.Fatalf("Unknown browser type: %s", bc.Type)

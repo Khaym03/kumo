@@ -13,7 +13,7 @@ const App: React.FC = () => {
         <TitleBar />
 
         {/* The main content area contains your new component */}
-        <main className="flex-1 overflow-auto p-4">
+        <main className="flex-1 overflow-auto">
           <Infrastructure />
         </main>
       </div>

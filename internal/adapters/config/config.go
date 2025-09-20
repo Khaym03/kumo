@@ -17,10 +17,15 @@ type Config struct {
 }
 
 type BrowserConfig struct {
-	Type  string `yaml:"type"`
-	Name  string `yaml:"name"`
-	Proxy bool   `yaml:"proxy,omitempty"`
-	Host  string `yaml:"host,omitempty"`
+	Type    string       `yaml:"type" json:"type"`
+	Name    string       `yaml:"name" json:"name"`
+	Proxy   bool         `yaml:"proxy,omitempty" json:"proxy,omitempty"`
+	Address string       `yaml:"address,omitempty" json:"address,omitempty"`
+	Pages   []PageConfig `yaml:"address,omitempty" json:"pages"`
+}
+
+type PageConfig struct {
+	Id string `yaml:"id" json:"id"`
 }
 
 func LoadKumoConfig() *Config {
