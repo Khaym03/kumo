@@ -3,12 +3,14 @@ package main
 import (
 	"embed"
 
+	"github.com/joho/godotenv"
+	log "github.com/sirupsen/logrus"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 )
 
-//go:embed all:ui/frontend/dist
+//go:embed all:frontend/dist
 var assets embed.FS
 
 func main() {
@@ -34,4 +36,11 @@ func main() {
 	if err != nil {
 		println("Error:", err.Error())
 	}
+}
+
+func init() {
+	if err := godotenv.Load(); err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	log.SetFormatter(&log.TextFormatter{ForceColors: true})
 }

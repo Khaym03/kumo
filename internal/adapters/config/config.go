@@ -21,7 +21,7 @@ type BrowserConfig struct {
 	Name    string       `yaml:"name" json:"name"`
 	Proxy   bool         `yaml:"proxy,omitempty" json:"proxy,omitempty"`
 	Address string       `yaml:"address,omitempty" json:"address,omitempty"`
-	Pages   []PageConfig `yaml:"address,omitempty" json:"pages"`
+	Pages   []PageConfig `yaml:"pages,omitempty" json:"pages"`
 }
 
 type PageConfig struct {

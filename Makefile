@@ -5,7 +5,6 @@ MOCKERY_CMD = mockery
 MACHINE_CMD = go run cmd/external-device/main.go
 BADGER_INSPECT_CMD = go run cmd/inspect/main.go
 TEST_CMD = go test ./... -v
-DEV_UI  = cd ui
 
 mocks:
 	@echo "Generating mocks with mockery..."
