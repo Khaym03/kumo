@@ -4,8 +4,11 @@ import { X, Minus, PictureInPicture } from 'lucide-react'
 import { AnimatedThemeToggler } from './ui/animated-theme-toggler'
 import { Button } from './ui/button'
 import NavBar from './navbar'
+import { useAppContext } from '@/context/app_ctx'
+import RunButton from '@/infrastruture/run_kumo_btn'
 
 const TitleBar: React.FC = () => {
+  const { isBuilding, setIsBuilding, config } = useAppContext()
   return (
     <div
       className="flex justify-between h-10 items-center text-foreground border-b"
@@ -15,11 +18,16 @@ const TitleBar: React.FC = () => {
         '--wails-draggable': 'drag'
       }}
     >
-      <div className="pl-3 font-medium">Kumo</div>
-
-      <nav className='flex gap-4'>
-        <NavBar/>
+      <nav className="flex gap-4 pl-3">
+        <NavBar />
       </nav>
+
+      <RunButton
+        isBuilding={isBuilding}
+        setIsBuilding={setIsBuilding}
+        config={config}
+        className="cursor-pointer w-28"
+      />
 
       <div className="grid grid-flow-col items-center h-10">
         <AnimatedThemeToggler className="w-6 px-2 rounded-none" />

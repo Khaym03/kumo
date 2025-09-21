@@ -32,6 +32,7 @@ const RunButton = ({ isBuilding, setIsBuilding, config, className }: RunButtonPr
     <Button
       onClick={handleToggle}
       className={className}
+      size={'sm'}
     >
       {isBuilding && <Loader2Icon className="animate-spin" />}
       {isBuilding ? 'Stop' : 'Run'}

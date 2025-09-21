@@ -23,29 +23,33 @@ import { main } from '@wailsjs/go/models'
 import { Loader2Icon, LoaderCircle } from 'lucide-react'
 import RunButton from './run_kumo_btn'
 
-const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
-  initialNodes,
-  initialEdges
-)
+// const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+//   initialNodes,
+//   initialEdges
+// )
 
 const Flow = () => {
-  const [nodes, setNodes, onNodesChange] = useNodesState(layoutedNodes)
-  const [edges, setEdges, onEdgesChange] = useEdgesState(layoutedEdges)
-  // const [config, setConfig] = useState<{ root?: string; browsers: any[] }>({ browsers: [] });
+  // const [nodes, setNodes, onNodesChange] = useNodesState(layoutedNodes)
+  // const [edges, setEdges, onEdgesChange] = useEdgesState(layoutedEdges)
 
-  const { isDarkMode } = useAppContext()
+  const {
+    nodes,
+    setNodes,
+    onNodesChange,
+    edges,
+    setEdges,
+    onEdgesChange,
+    onConnect,
+    isDarkMode
+  } = useAppContext()
 
-  const onConnect = useCallback(
-    (params: any) => setEdges(els => addEdge(params, els)),
-    [setEdges]
-  )
-  const { config } = useBuildConfig(nodes, edges)
+  // const onConnect = useCallback(
+  //   (params: any) => setEdges(els => addEdge(params, els)),
+  //   [setEdges]
+  // )
+  // const { config } = useBuildConfig(nodes, edges)
 
-  const [isBuilding, setIsBuilding] = useState(false)
-
-  // useEffect(() => {
-  //   console.log('Built scrapper config:', config)
-  // }, [config])
+  // const [isBuilding, setIsBuilding] = useState(false)
 
   return (
     <div className="relative h-full w-full">
@@ -66,12 +70,7 @@ const Flow = () => {
         <Cmd />
       </ReactFlow>
 
-      <RunButton
-        isBuilding={isBuilding}
-        setIsBuilding={setIsBuilding}
-        config={config}
-        className="absolute top-4 right-4 cursor-pointer w-28"
-      />
+     
     </div>
   )
 }

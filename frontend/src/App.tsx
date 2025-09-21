@@ -3,7 +3,7 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router";
 import TitleBar from "./components/tittle_bar";
 import Infrastructure from "./infrastruture/Infrastructure";
-import Logs from "@/logs/logs"; // Assuming you have a Logs component
+import Logs from "@/logs/app"; // Assuming you have a Logs component
 import { AppProvider } from "./context/app_ctx";
 
 const App: React.FC = () => {

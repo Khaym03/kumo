@@ -25,7 +25,6 @@ type App struct {
 
 // NewApp creates a new App application struct
 func NewApp() *App {
-
 	return &App{}
 }
 
@@ -33,6 +32,10 @@ func NewApp() *App {
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+
+	log.SetFormatter(&log.TextFormatter{ForceColors: true})
+	log.SetLevel(log.InfoLevel)
+	log.AddHook(NewLogrusHook(ctx))
 }
 
 var (

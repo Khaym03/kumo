@@ -42,5 +42,4 @@ func init() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file")
 	}
-	log.SetFormatter(&log.TextFormatter{ForceColors: true})
 }

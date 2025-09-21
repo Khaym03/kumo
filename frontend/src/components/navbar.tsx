@@ -1,8 +1,11 @@
 // src/components/NavBar.tsx
+import { useAppContext } from "@/context/app_ctx";
+import RunButton from "@/infrastruture/run_kumo_btn";
 import React from "react";
 import { NavLink } from "react-router";
 
 const NavBar: React.FC = () => {
+
   return (
     <>
       <NavLink
@@ -21,6 +24,8 @@ const NavBar: React.FC = () => {
       >
         Logs
       </NavLink>
+
+       
     </>
   );
 };
