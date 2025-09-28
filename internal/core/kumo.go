@@ -81,9 +81,10 @@ func (k *KumoEngine) Run(initialReqs ...*types.Request) error {
 	}
 
 	workersWaitGrp := sync.WaitGroup{}
-	workersWaitGrp.Add(k.workersCount)
 	for i := 1; i <= k.workersCount; i++ {
-		go k.worker(k.ctx, &workersWaitGrp, i)
+		workersWaitGrp.Go(func() {
+			k.worker(k.ctx, i)
+		})
 	}
 
 	k.requestWg.Wait()
@@ -148,9 +149,7 @@ func (k *KumoEngine) filterRequests(reqs []*types.Request) []*types.Request {
 }
 
 // worker fetches requests from the queue and processes them.
-func (k *KumoEngine) worker(ctx context.Context, wg *sync.WaitGroup, id int) {
-	defer wg.Done()
-
+func (k *KumoEngine) worker(ctx context.Context, id int) {
 	for {
 		select {
 		case req, ok := <-k.queue:
