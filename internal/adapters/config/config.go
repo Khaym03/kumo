@@ -13,6 +13,7 @@ type Config struct {
 	NumOfPagesPerBrowser int             `yaml:"numOfPagesPerBrowser"`
 	RetryCount           int             `yaml:"retryCount"`
 	StorageDir           string          `yaml:"storageDir"`
+	FingerprintsPath string `yaml:"fingerprintsPath"`
 	AllowBadgerLogger    bool            `yaml:"allowBadgerLogger"`
 }
 

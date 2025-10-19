@@ -1,6 +1,7 @@
 numOfPagesPerBrowser: 2
 retryCount: 1
 storageDir: ./temp/storage
+fingerprintsPath: ./data/fingerprints.json
 allowBadgerLogger: false
 browsers:
   - type: local
