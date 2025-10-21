@@ -118,10 +118,6 @@ func (k *KumoEngine) Enqueue(r ...*types.Request) {
 
 // Shutdown gracefully shuts down the engine and its dependencies.
 func (k *KumoEngine) Shutdown() error {
-	err := k.reqStore.Close()
-	if err != nil {
-		log.Error(err)
-	}
 	return k.BrowserPool.Close()
 }
 

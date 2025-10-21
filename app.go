@@ -16,16 +16,22 @@ import (
 	"github.com/Khaym03/kumo/internal/pkg/types"
 	"github.com/Khaym03/kumo/internal/ports"
 	log "github.com/sirupsen/logrus"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // App struct
 type App struct {
 	ctx context.Context
+	workflows ports.WorkFlow
+	db *storage.BadgerDBStore
 }
 
 // NewApp creates a new App application struct
-func NewApp() *App {
-	return &App{}
+func NewApp(db *storage.BadgerDBStore, workflows ports.WorkFlow) *App {
+	return &App{
+		db: db,
+		workflows: workflows,
+	}
 }
 
 // startup is called when the app starts. The context is saved
@@ -45,9 +51,6 @@ var (
 )
 
 func (a *App) RunKumo(conf KumoConfig) {
-	fmt.Println(conf)
-
-	// Lock to check the state and set the new context safely
 	mu.Lock()
 	if cancelFunc != nil {
 		mu.Unlock()
@@ -56,8 +59,21 @@ func (a *App) RunKumo(conf KumoConfig) {
 	}
 	ctx, cancel := context.WithCancel(a.ctx)
 	cancelFunc = cancel
-	mu.Unlock() // Unlock after setting the state
+	mu.Unlock()
 
+	defer func ()  {
+		if r:= recover(); r != nil {
+			a.ShowError(r)
+		}
+	}()
+
+	defer func ()  {
+		// Lock again to safely reset the state
+		mu.Lock()
+		cancelFunc = nil
+		mu.Unlock()
+	}()
+	
 	// --- INITIALIZE SERVICES ---
 	// Initialize the proxy manager, browser pool, and page pool.
 	// You can configure different proxy managers here.
@@ -65,16 +81,6 @@ func (a *App) RunKumo(conf KumoConfig) {
 	creators := browser.CreateCreatorsFromConfig(conf.Browsers, pm)
 	browserPool := browser.NewPool(creators...)
 	pp := pagepool.NewPagePool(browserPool, 2)
-
-	// Initialize the persistence store. The application will use this for
-	// caching and tracking completed/pending requests.
-	dbConn, err := storage.NewBadgerDB("./temp/storage", false)
-	if err != nil {
-		log.Fatal(err)
-	}
-	// Defer closing the database connection.
-	defer dbConn.Close()
-	db := storage.NewBadgerDBStore(dbConn)
 
 	// --- DEFINE COLLECTORS AND INITIAL REQUESTS ---
 	// Register your concrete collectors here. Collectors define the
@@ -89,7 +95,7 @@ func (a *App) RunKumo(conf KumoConfig) {
 
 	// Define the logic to skip types.Request
 	requestFilters := []ports.RequestFilter{
-		filter.NewIsCompletedFilter(db),
+		filter.NewIsCompletedFilter(a.db),
 	}
 
 	// --- START THE ENGINE ---
@@ -97,8 +103,8 @@ func (a *App) RunKumo(conf KumoConfig) {
 		ctx,
 		browserPool,
 		pp,
-		db,
-		db,
+		a.db,
+		a.db,
 		requestFilters,
 		collectors...,
 	)
@@ -124,10 +130,6 @@ func (a *App) RunKumo(conf KumoConfig) {
 	if err := kumo.Shutdown(); err != nil {
 		log.Error(err)
 	}
-	// Lock again to safely reset the state
-	mu.Lock()
-	cancelFunc = nil
-	mu.Unlock()
 }
 
 func (a *App) CancelKumo() {
@@ -142,6 +144,22 @@ func (a *App) CancelKumo() {
 
 	fmt.Println("No task is currently running.")
 
+}
+
+func (a *App) SaveWorkFlow(name string, value map[string]any) {
+	err := a.workflows.Save(name, value)
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+func (a *App) LoadWorkFlows()[]map[string]any {
+	wfs, err := a.workflows.Load()
+	if err != nil {
+		log.Println(err)
+	}
+
+	return  wfs
 }
 
 type KumoConfig struct {
@@ -159,4 +177,15 @@ func initialsURL(collectorName string) []*types.Request {
 	}
 
 	return reqs
+}
+
+func (a *App) ShowError(reason any) {
+    _, err := runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
+		Type: runtime.ErrorDialog,
+		Title: "Error",
+		Message: fmt.Sprintf("reason: %v", reason),
+    })
+	if err != nil {
+		log.Println(err)
+	}
 }

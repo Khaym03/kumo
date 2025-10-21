@@ -53,7 +53,9 @@ func main() {
 	}
 	// Defer closing the database connection.
 	defer dbConn.Close()
+	
 	db := storage.NewBadgerDBStore(dbConn)
+	defer db.Close()
 
 	// --- DEFINE COLLECTORS AND INITIAL REQUESTS ---
 	// Register your concrete collectors here. Collectors define the

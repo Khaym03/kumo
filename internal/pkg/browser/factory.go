@@ -23,7 +23,7 @@ type BrowserPool struct {
 // from the number of BrowserCreator instances provided.
 func NewPool(creators ...BrowserCreator) *BrowserPool {
 	if len(creators) == 0 {
-		log.Fatal("No browser creators provided. Cannot create a browser factory.")
+		log.Panic("No browser creators provided. Cannot create a browser factory.")
 	}
 
 	return &BrowserPool{

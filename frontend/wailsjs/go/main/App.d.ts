@@ -4,4 +4,10 @@ import {main} from '../models';
 
 export function CancelKumo():Promise<void>;
 
+export function LoadWorkFlows():Promise<Array<Record<string, any>>>;
+
 export function RunKumo(arg1:main.KumoConfig):Promise<void>;
+
+export function SaveWorkFlow(arg1:string,arg2:Record<string, any>):Promise<void>;
+
+export function ShowError(arg1:any):Promise<void>;

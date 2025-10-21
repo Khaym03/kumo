@@ -47,7 +47,7 @@ func (s *KumoEngineTestSuite) SetupTest() {
 	// The IsCompleted check is now handled by the filter.
 	// We no longer set up this expectation on the mockReqStore.
 
-	s.mockReqStore.On("SavePending", mock.Anything).Return(nil)
+	s.mockReqStore.On("SavePending", mock.Anything, mock.Anything).Return(nil)
 	s.mockReqStore.On("SaveCompleted", mock.Anything).Return(nil)
 	s.mockReqStore.On("RemoveFromPending", mock.Anything).Return(nil)
 

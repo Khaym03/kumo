@@ -3,6 +3,8 @@ package main
 import (
 	"embed"
 
+	"github.com/Khaym03/kumo/internal/adapters/config"
+	"github.com/Khaym03/kumo/internal/adapters/storage"
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
 	"github.com/wailsapp/wails/v2"
@@ -14,11 +16,23 @@ import (
 var assets embed.FS
 
 func main() {
-	// Create an instance of the app structure
-	app := NewApp()
+	c := config.LoadKumoConfig()
+	dbConn, err := storage.NewBadgerDB(c.StorageDir, true)
+	if err != nil {
+		panic(err)
+	}
+	defer dbConn.Close()
 
+	db := storage.NewBadgerDBStore(dbConn)
+	defer db.Close()
+
+	wf := storage.NewBadgerWorkFlowStore(dbConn)
+
+
+	// Create an instance of the app structure
+	app := NewApp(db, wf)
 	// Create application with options
-	err := wails.Run(&options.App{
+	err = wails.Run(&options.App{
 		Title:     "kumo",
 		Width:     1024,
 		Height:    768,

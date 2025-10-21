@@ -22,6 +22,7 @@ import { CancelKumo, RunKumo } from '@wailsjs/go/main/App'
 import { main } from '@wailsjs/go/models'
 import { Loader2Icon, LoaderCircle } from 'lucide-react'
 import RunButton from './run_kumo_btn'
+import SaveWorkFlow from './save_workflow'
 
 // const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
 //   initialNodes,
@@ -66,6 +67,7 @@ const Flow = () => {
       >
         <Background />
         <DevTools position="top-left" />
+        <SaveWorkFlow/>
         <Controls />
         <Cmd />
       </ReactFlow>

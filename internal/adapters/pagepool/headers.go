@@ -3,7 +3,7 @@ package pagepool
 import (
 	"strings"
 
-	"github.com/Khaym03/kumo/internal/adapters/fingerprint"
+	fingerprint "github.com/Khaym03/kumo/internal/adapters/fingerprint"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/proto"
 	log "github.com/sirupsen/logrus"
