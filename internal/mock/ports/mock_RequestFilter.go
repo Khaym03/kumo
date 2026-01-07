@@ -22,31 +22,23 @@ func (_m *MockRequestFilter) EXPECT() *MockRequestFilter_Expecter {
 }
 
 // Filter provides a mock function with given fields: req
-func (_m *MockRequestFilter) Filter(req *types.Request) (bool, error) {
+func (_m *MockRequestFilter) Filter(req []*types.Request) []*types.Request {
 	ret := _m.Called(req)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Filter")
 	}
 
-	var r0 bool
-	var r1 error
-	if rf, ok := ret.Get(0).(func(*types.Request) (bool, error)); ok {
-		return rf(req)
-	}
-	if rf, ok := ret.Get(0).(func(*types.Request) bool); ok {
+	var r0 []*types.Request
+	if rf, ok := ret.Get(0).(func([]*types.Request) []*types.Request); ok {
 		r0 = rf(req)
 	} else {
-		r0 = ret.Get(0).(bool)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*types.Request)
+		}
 	}
 
-	if rf, ok := ret.Get(1).(func(*types.Request) error); ok {
-		r1 = rf(req)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }
 
 // MockRequestFilter_Filter_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Filter'
@@ -55,24 +47,24 @@ type MockRequestFilter_Filter_Call struct {
 }
 
 // Filter is a helper method to define mock.On call
-//   - req *types.Request
+//   - req []*types.Request
 func (_e *MockRequestFilter_Expecter) Filter(req interface{}) *MockRequestFilter_Filter_Call {
 	return &MockRequestFilter_Filter_Call{Call: _e.mock.On("Filter", req)}
 }
 
-func (_c *MockRequestFilter_Filter_Call) Run(run func(req *types.Request)) *MockRequestFilter_Filter_Call {
+func (_c *MockRequestFilter_Filter_Call) Run(run func(req []*types.Request)) *MockRequestFilter_Filter_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(*types.Request))
+		run(args[0].([]*types.Request))
 	})
 	return _c
 }
 
-func (_c *MockRequestFilter_Filter_Call) Return(_a0 bool, _a1 error) *MockRequestFilter_Filter_Call {
-	_c.Call.Return(_a0, _a1)
+func (_c *MockRequestFilter_Filter_Call) Return(_a0 []*types.Request) *MockRequestFilter_Filter_Call {
+	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *MockRequestFilter_Filter_Call) RunAndReturn(run func(*types.Request) (bool, error)) *MockRequestFilter_Filter_Call {
+func (_c *MockRequestFilter_Filter_Call) RunAndReturn(run func([]*types.Request) []*types.Request) *MockRequestFilter_Filter_Call {
 	_c.Call.Return(run)
 	return _c
 }

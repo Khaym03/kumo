@@ -53,7 +53,7 @@ func main() {
 	}
 	// Defer closing the database connection.
 	defer dbConn.Close()
-	
+
 	db := storage.NewBadgerDBStore(dbConn)
 	defer db.Close()
 
@@ -71,9 +71,9 @@ func main() {
 	}
 
 	// Define the logic to skip types.Request
-	requestFilters := []ports.RequestFilter{
+	requestFilters := filter.NewFilterComposite(
 		filter.NewIsCompletedFilter(db),
-	}
+	)
 
 	// --- START THE ENGINE ---
 	kumo := core.NewKumoEngine(

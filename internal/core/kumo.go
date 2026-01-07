@@ -24,7 +24,7 @@ type KumoEngine struct {
 	ports.PagePool
 	fs           ports.FileStorage
 	reqStore     ports.PersistenceStore
-	reqFilters   []ports.RequestFilter
+	reqFilter    ports.RequestFilter
 	workersCount int
 }
 
@@ -35,7 +35,7 @@ func NewKumoEngine(
 	pp ports.PagePool,
 	rs ports.PersistenceStore,
 	fs ports.FileStorage,
-	rf []ports.RequestFilter,
+	rf ports.RequestFilter,
 	cs ...ports.Collector,
 ) *KumoEngine {
 	m := map[string]ports.Collector{}
@@ -53,7 +53,7 @@ func NewKumoEngine(
 		collectors:   m,
 		reqStore:     rs,
 		fs:           fs,
-		reqFilters:   rf,
+		reqFilter:    rf,
 		workersCount: pp.Size(),
 	}
 }
@@ -101,7 +101,7 @@ func (k *KumoEngine) Enqueue(r ...*types.Request) {
 	k.mu.Lock()
 	defer k.mu.Unlock()
 
-	requestsToSave := k.filterRequests(r)
+	requestsToSave := k.reqFilter.Filter(r)
 
 	if len(requestsToSave) == 0 {
 		return
@@ -119,29 +119,6 @@ func (k *KumoEngine) Enqueue(r ...*types.Request) {
 // Shutdown gracefully shuts down the engine and its dependencies.
 func (k *KumoEngine) Shutdown() error {
 	return k.BrowserPool.Close()
-}
-
-// filterRequests applies all registered filters to a slice of requests.
-func (k *KumoEngine) filterRequests(reqs []*types.Request) []*types.Request {
-	filteredReq := []*types.Request{}
-	for _, req := range reqs {
-		shouldFilter := false
-		for _, filter := range k.reqFilters {
-			filtered, err := filter.Filter(req)
-			if err != nil {
-				log.Warnf("Error applying filter: %v", err)
-				continue
-			}
-			if filtered {
-				shouldFilter = true
-				break
-			}
-		}
-		if !shouldFilter {
-			filteredReq = append(filteredReq, req)
-		}
-	}
-	return filteredReq
 }
 
 // worker fetches requests from the queue and processes them.
