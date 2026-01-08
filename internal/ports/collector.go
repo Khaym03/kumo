@@ -16,7 +16,6 @@ type Collector interface {
 		page *rod.Page,
 		req *types.Request,
 		queue Enqueuer,
-		fs FileStorage,
 	) error
 
 	String() string
@@ -29,5 +28,5 @@ type CollectorRegistry interface {
 }
 
 type Enqueuer interface {
-	Enqueue(reqs ...*types.Request)
+	Dispatch(reqs ...*types.Request)
 }

@@ -95,7 +95,7 @@ func (a *AnugaPhase1Collector) ProcessPage(
 		}
 
 		// Enqueue with the context
-		queue.Enqueue(&types.Request{
+		queue.Dispatch(&types.Request{
 			URL:       item.URL,
 			Collector: phase2Identifier,
 		})

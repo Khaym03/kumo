@@ -78,11 +78,8 @@ func main() {
 	// --- START THE ENGINE ---
 	kumo := core.NewKumoEngine(
 		ctx,
-		browserPool,
-		pp,
-		db,
-		db,
-		requestFilters,
+		core.NewResourcePool(browserPool, pp),
+		core.NewDispatcher(requestFilters, db),
 		collectors...,
 	)
 

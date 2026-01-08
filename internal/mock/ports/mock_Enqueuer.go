@@ -21,8 +21,8 @@ func (_m *MockEnqueuer) EXPECT() *MockEnqueuer_Expecter {
 	return &MockEnqueuer_Expecter{mock: &_m.Mock}
 }
 
-// Enqueue provides a mock function with given fields: reqs
-func (_m *MockEnqueuer) Enqueue(reqs ...*types.Request) {
+// Dispatch provides a mock function with given fields: reqs
+func (_m *MockEnqueuer) Dispatch(reqs ...*types.Request) {
 	_va := make([]interface{}, len(reqs))
 	for _i := range reqs {
 		_va[_i] = reqs[_i]
@@ -32,19 +32,19 @@ func (_m *MockEnqueuer) Enqueue(reqs ...*types.Request) {
 	_m.Called(_ca...)
 }
 
-// MockEnqueuer_Enqueue_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Enqueue'
-type MockEnqueuer_Enqueue_Call struct {
+// MockEnqueuer_Dispatch_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Dispatch'
+type MockEnqueuer_Dispatch_Call struct {
 	*mock.Call
 }
 
-// Enqueue is a helper method to define mock.On call
+// Dispatch is a helper method to define mock.On call
 //   - reqs ...*types.Request
-func (_e *MockEnqueuer_Expecter) Enqueue(reqs ...interface{}) *MockEnqueuer_Enqueue_Call {
-	return &MockEnqueuer_Enqueue_Call{Call: _e.mock.On("Enqueue",
+func (_e *MockEnqueuer_Expecter) Dispatch(reqs ...interface{}) *MockEnqueuer_Dispatch_Call {
+	return &MockEnqueuer_Dispatch_Call{Call: _e.mock.On("Dispatch",
 		append([]interface{}{}, reqs...)...)}
 }
 
-func (_c *MockEnqueuer_Enqueue_Call) Run(run func(reqs ...*types.Request)) *MockEnqueuer_Enqueue_Call {
+func (_c *MockEnqueuer_Dispatch_Call) Run(run func(reqs ...*types.Request)) *MockEnqueuer_Dispatch_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		variadicArgs := make([]*types.Request, len(args)-0)
 		for i, a := range args[0:] {
@@ -57,12 +57,12 @@ func (_c *MockEnqueuer_Enqueue_Call) Run(run func(reqs ...*types.Request)) *Mock
 	return _c
 }
 
-func (_c *MockEnqueuer_Enqueue_Call) Return() *MockEnqueuer_Enqueue_Call {
+func (_c *MockEnqueuer_Dispatch_Call) Return() *MockEnqueuer_Dispatch_Call {
 	_c.Call.Return()
 	return _c
 }
 
-func (_c *MockEnqueuer_Enqueue_Call) RunAndReturn(run func(...*types.Request)) *MockEnqueuer_Enqueue_Call {
+func (_c *MockEnqueuer_Dispatch_Call) RunAndReturn(run func(...*types.Request)) *MockEnqueuer_Dispatch_Call {
 	_c.Run(run)
 	return _c
 }

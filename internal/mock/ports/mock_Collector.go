@@ -26,17 +26,17 @@ func (_m *MockCollector) EXPECT() *MockCollector_Expecter {
 	return &MockCollector_Expecter{mock: &_m.Mock}
 }
 
-// ProcessPage provides a mock function with given fields: ctx, page, req, queue, fs
-func (_m *MockCollector) ProcessPage(ctx context.Context, page *rod.Page, req *types.Request, queue ports.Enqueuer, fs ports.FileStorage) error {
-	ret := _m.Called(ctx, page, req, queue, fs)
+// ProcessPage provides a mock function with given fields: ctx, page, req, queue
+func (_m *MockCollector) ProcessPage(ctx context.Context, page *rod.Page, req *types.Request, queue ports.Enqueuer) error {
+	ret := _m.Called(ctx, page, req, queue)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ProcessPage")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, *rod.Page, *types.Request, ports.Enqueuer, ports.FileStorage) error); ok {
-		r0 = rf(ctx, page, req, queue, fs)
+	if rf, ok := ret.Get(0).(func(context.Context, *rod.Page, *types.Request, ports.Enqueuer) error); ok {
+		r0 = rf(ctx, page, req, queue)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -54,14 +54,13 @@ type MockCollector_ProcessPage_Call struct {
 //   - page *rod.Page
 //   - req *types.Request
 //   - queue ports.Enqueuer
-//   - fs ports.FileStorage
-func (_e *MockCollector_Expecter) ProcessPage(ctx interface{}, page interface{}, req interface{}, queue interface{}, fs interface{}) *MockCollector_ProcessPage_Call {
-	return &MockCollector_ProcessPage_Call{Call: _e.mock.On("ProcessPage", ctx, page, req, queue, fs)}
+func (_e *MockCollector_Expecter) ProcessPage(ctx interface{}, page interface{}, req interface{}, queue interface{}) *MockCollector_ProcessPage_Call {
+	return &MockCollector_ProcessPage_Call{Call: _e.mock.On("ProcessPage", ctx, page, req, queue)}
 }
 
-func (_c *MockCollector_ProcessPage_Call) Run(run func(ctx context.Context, page *rod.Page, req *types.Request, queue ports.Enqueuer, fs ports.FileStorage)) *MockCollector_ProcessPage_Call {
+func (_c *MockCollector_ProcessPage_Call) Run(run func(ctx context.Context, page *rod.Page, req *types.Request, queue ports.Enqueuer)) *MockCollector_ProcessPage_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(*rod.Page), args[2].(*types.Request), args[3].(ports.Enqueuer), args[4].(ports.FileStorage))
+		run(args[0].(context.Context), args[1].(*rod.Page), args[2].(*types.Request), args[3].(ports.Enqueuer))
 	})
 	return _c
 }
@@ -71,7 +70,7 @@ func (_c *MockCollector_ProcessPage_Call) Return(_a0 error) *MockCollector_Proce
 	return _c
 }
 
-func (_c *MockCollector_ProcessPage_Call) RunAndReturn(run func(context.Context, *rod.Page, *types.Request, ports.Enqueuer, ports.FileStorage) error) *MockCollector_ProcessPage_Call {
+func (_c *MockCollector_ProcessPage_Call) RunAndReturn(run func(context.Context, *rod.Page, *types.Request, ports.Enqueuer) error) *MockCollector_ProcessPage_Call {
 	_c.Call.Return(run)
 	return _c
 }
