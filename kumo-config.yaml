@@ -1,5 +1,8 @@
 numOfPagesPerBrowser: 2
 retryCount: 1
+rate_limit:
+  delay: 1000       # Miliseconds
+  max_burst: 1
 storageDir: ./temp/storage
 fingerprintsPath: ./data/fingerprints.json
 allowBadgerLogger: false

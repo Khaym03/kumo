@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/Khaym03/kumo/internal/adapters/config"
 	"github.com/Khaym03/kumo/internal/adapters/filter"
@@ -75,11 +76,16 @@ func main() {
 		filter.NewIsCompletedFilter(db),
 	)
 
+	rateLimiter := core.NewDomainLimiter(
+		time.Duration(conf.RateLimit.Delay * int(time.Millisecond)),
+		conf.RateLimit.MaxBurst,
+	)
+
 	// --- START THE ENGINE ---
 	kumo := core.NewKumoEngine(
 		ctx,
 		core.NewResourcePool(browserPool, pp),
-		core.NewDispatcher(requestFilters, db),
+		core.NewDispatcher(requestFilters, db, rateLimiter),
 		collectors...,
 	)
 

@@ -12,7 +12,8 @@ import (
 func TestDispatcher_Finish(t *testing.T) {
 	mockFilter := mocks.NewMockRequestFilter(t)
 	mockStore := mocks.NewMockPersistenceStore(t)
-	dispatcher := NewDispatcher(mockFilter, mockStore)
+	mockLimiter := mocks.NewMockRateLimiter(t)
+	dispatcher := NewDispatcher(mockFilter, mockStore, mockLimiter)
 
 	req := &types.Request{URL: "http://test.com"}
 

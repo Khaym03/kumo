@@ -15,14 +15,20 @@ type Dispatcher struct {
 	wg          sync.WaitGroup
 	filter      ports.RequestFilter
 	persistence ports.PersistenceStore
+	limiter 	ports.RateLimiter
 	closeOnce   sync.Once
 }
 
-func NewDispatcher(f ports.RequestFilter, p ports.PersistenceStore) *Dispatcher {
+func NewDispatcher(
+	f ports.RequestFilter,
+	p ports.PersistenceStore,
+	limiter ports.RateLimiter,
+	) *Dispatcher {
 	return &Dispatcher{
 		queue:       make(chan *types.Request, 500),
 		filter:      f,
 		persistence: p,
+		limiter: limiter,
 	}
 }
 
@@ -56,7 +62,15 @@ func (rm *Dispatcher) Pull(ctx context.Context) (*types.Request, bool) {
 	case <-ctx.Done():
 		return nil, false
 	case req, ok := <-rm.queue:
-		return req, ok
+		if !ok {
+			return nil, false
+		}
+
+		if err := rm.limiter.Wait(ctx, req.URL); err != nil {
+			return nil, false
+		}
+
+		return req, true
 	}
 }
 

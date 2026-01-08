@@ -15,6 +15,7 @@ type Config struct {
 	StorageDir           string          `yaml:"storageDir"`
 	FingerprintsPath string `yaml:"fingerprintsPath"`
 	AllowBadgerLogger    bool            `yaml:"allowBadgerLogger"`
+	RateLimit RateLimitConfig `yaml:"rate_limit"`
 }
 
 type BrowserConfig struct {
@@ -27,6 +28,11 @@ type BrowserConfig struct {
 
 type PageConfig struct {
 	Id string `yaml:"id" json:"id"`
+}
+
+type RateLimitConfig struct {
+	Delay int  `yaml:"delay" json:"delay"`
+	MaxBurst int  `yaml:"max_burst" json:"max_burst"`
 }
 
 func LoadKumoConfig() *Config {

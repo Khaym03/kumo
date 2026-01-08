@@ -14,3 +14,7 @@ type Dispatcher interface {
 	Pull(ctx context.Context) (*types.Request, bool)
 	Shutdown()
 }
+
+type RateLimiter interface {
+	Wait(ctx context.Context, rawURL string) error
+}
